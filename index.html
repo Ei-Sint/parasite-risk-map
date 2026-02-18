@@ -734,19 +734,14 @@
 <script>
 // ── FARM DATA ────────────────────────────────────────────────────────────────
 const FARMS = [
-  { id:1,  name:"Thornfield Farm",      region:"England - North",     type:"Sheep",  lat:54.2069, lng:-1.8014 },
-  { id:2,  name:"Dales View Farm",      region:"England - North",     type:"Cattle", lat:54.0853, lng:-2.2920 },
-  { id:3,  name:"Moorside Pastures",    region:"England - North",     type:"Mixed",  lat:53.6450, lng:-1.7830 },
-  { id:4,  name:"Riverside Farm",       region:"England - Midlands",  type:"Sheep",  lat:52.9540, lng:-1.1480 },
-  { id:5,  name:"Stonebridge Holdings", region:"England - Midlands",  type:"Cattle", lat:52.4060, lng:-1.5140 },
-  { id:6,  name:"Greenacres Farm",      region:"England - Midlands",  type:"Sheep",  lat:52.1960, lng:-2.2200 },
-  { id:7,  name:"Chalk Hill Farm",      region:"England - South",     type:"Mixed",  lat:51.2802, lng:-1.0870 },
-  { id:8,  name:"Westfield Pastures",   region:"England - South",     type:"Sheep",  lat:51.0580, lng:-2.8770 },
-  { id:9,  name:"Downland Farm",        region:"England - South",     type:"Cattle", lat:50.8503, lng:-0.1270 },
-  { id:10, name:"Glen Carron Farm",     region:"Scotland",            type:"Sheep",  lat:57.5050, lng:-5.1800 },
-  { id:11, name:"Forth Valley Pastures",region:"Scotland",            type:"Mixed",  lat:56.1370, lng:-3.9180 },
-  { id:12, name:"Cambrian Hill Farm",   region:"Wales",               type:"Sheep",  lat:52.5780, lng:-3.6510 },
-  { id:13, name:"Brecon Edge Farm",     region:"Wales",               type:"Cattle", lat:51.9480, lng:-3.4090 },
+  { id:1, name:"Thornfield Farm",   region:"England - North",    type:"Sheep",  lat:54.2069, lng:-1.8014 },
+  { id:2, name:"Moorside Pastures", region:"England - North",    type:"Mixed",  lat:53.6450, lng:-1.7830 },
+  { id:3, name:"Riverside Farm",    region:"England - Midlands", type:"Sheep",  lat:52.9540, lng:-1.1480 },
+  { id:4, name:"Greenacres Farm",   region:"England - Midlands", type:"Cattle", lat:52.1960, lng:-2.2200 },
+  { id:5, name:"Chalk Hill Farm",   region:"England - South",    type:"Mixed",  lat:51.2802, lng:-1.0870 },
+  { id:6, name:"Downland Farm",     region:"England - South",    type:"Cattle", lat:50.8503, lng:-0.1270 },
+  { id:7, name:"Glen Carron Farm",  region:"Scotland",           type:"Sheep",  lat:57.5050, lng:-5.1800 },
+  { id:8, name:"Cambrian Hill Farm",region:"Wales",              type:"Sheep",  lat:52.5780, lng:-3.6510 },
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
@@ -810,10 +805,22 @@ function buildExplanation(farm, temp, rain7d, humidity, risk) {
 }
 
 // ── MAP SETUP ────────────────────────────────────────────────────────────────
-const map = L.map('map', { center: [54.5, -3.5], zoom: 6, zoomControl: true });
+const UK_BOUNDS = L.latLngBounds(
+  L.latLng(49.5, -8.5),   // South-West corner (Cornwall / SW Ireland)
+  L.latLng(61.0,  2.0)    // North-East corner (Shetland / North Sea)
+);
+const map = L.map('map', {
+  center: [54.5, -3.5],
+  zoom: 6,
+  minZoom: 5,
+  maxZoom: 13,
+  maxBounds: UK_BOUNDS,
+  maxBoundsViscosity: 1.0,
+  zoomControl: true
+});
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
-  subdomains: 'abcd', maxZoom: 18
+  subdomains: 'abcd', maxZoom: 13
 }).addTo(map);
 
 // ── MARKER ICONS ─────────────────────────────────────────────────────────────
