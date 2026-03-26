@@ -656,7 +656,7 @@
     <div class="sidebar-head">
       <div class="sidebar-title">Farm Locations</div>
       <div class="filter-row">
-        <select class="filter-select" id="regionFilter" onchange="filterFarms()">
+        <select class="filter-select" id="regionFilter" onchange="filterfarms()">
           <option value="all">All Regions</option>
           <option value="England - North">England – North</option>
           <option value="England - Midlands">England – Midlands</option>
@@ -733,25 +733,27 @@
 
 <script>
 // ── FARM DATA ────────────────────────────────────────────────────────────────
-const FARMS = [
-  { id:1,  name:"Thornfield Farm",      region:"England - North",     type:"Sheep",  lat:54.2069, lng:-1.8014 },
-  { id:2,  name:"Dales View Farm",      region:"England - North",     type:"Cattle", lat:54.0853, lng:-2.2920 },
-  { id:3,  name:"Moorside Pastures",    region:"England - North",     type:"Mixed",  lat:53.6450, lng:-1.7830 },
-  { id:4,  name:"Riverside Farm",       region:"England - Midlands",  type:"Sheep",  lat:52.9540, lng:-1.1480 },
-  { id:5,  name:"Stonebridge Holdings", region:"England - Midlands",  type:"Cattle", lat:52.4060, lng:-1.5140 },
-  { id:6,  name:"Greenacres Farm",      region:"England - Midlands",  type:"Sheep",  lat:52.1960, lng:-2.2200 },
-  { id:7,  name:"Chalk Hill Farm",      region:"England - South",     type:"Mixed",  lat:51.2802, lng:-1.0870 },
-  { id:8,  name:"Westfield Pastures",   region:"England - South",     type:"Sheep",  lat:51.0580, lng:-2.8770 },
-  { id:9,  name:"Downland Farm",        region:"England - South",     type:"Cattle", lat:50.8503, lng:-0.1270 },
-  { id:10, name:"Glen Carron Farm",     region:"Scotland",            type:"Sheep",  lat:57.5050, lng:-5.1800 },
-  { id:11, name:"Forth Valley Pastures",region:"Scotland",            type:"Mixed",  lat:56.1370, lng:-3.9180 },
-  { id:12, name:"Cambrian Hill Farm",   region:"Wales",               type:"Sheep",  lat:52.5780, lng:-3.6510 },
-  { id:13, name:"Brecon Edge Farm",     region:"Wales",               type:"Cattle", lat:51.9480, lng:-3.4090 },
+const farms = [
+  { id: 1, name: "Snowdonia Farm", lat: 53.0685, lng: -4.0762, region: "Wales", type: "Sheep", altitude: 350 },
+  { id: 2, name: "Lakeland View Farm", lat: 54.4609, lng: -3.0886, region: "England - North", type: "Cattle", altitude: 180 },
+  { id: 3, name: "Pennine Ridge Farm", lat: 53.8271, lng: -2.0982, region: "England - North", type: "Mixed", altitude: 420 },
+  { id: 4, name: "Somerset Levels Farm", lat: 51.0881, lng: -2.8932, region: "England - South", type: "Cattle", altitude: 15 },
+  { id: 5, name: "Cornwall Coastal Farm", lat: 50.2660, lng: -5.0527, region: "England - South", type: "Sheep", altitude: 95 },
+  { id: 6, name: "Cotswold Farm", lat: 51.8330, lng: -1.8526, region: "England - South", type: "Sheep", altitude: 210 },
+  { id: 7, name: "Cairngorm Hill Farm", lat: 57.0883, lng: -3.6778, region: "Scotland", type: "Sheep", altitude: 580 },
+  { id: 8, name: "Brecon Beacons Farm", lat: 51.8838, lng: -3.4360, region: "Wales", type: "Mixed", altitude: 390 },
+  { id: 9, name: "Yorkshire Dales Farm", lat: 54.2406, lng: -2.0728, region: "England - North", type: "Sheep", altitude: 320 },
+  { id: 10, name: "Peak District Farm", lat: 53.3478, lng: -1.8158, region: "England - North", type: "Mixed", altitude: 380 },
+  { id: 11, name: "Dartmoor Farm", lat: 50.5719, lng: -3.9289, region: "England - South", type: "Cattle", altitude: 450 },
+  { id: 12, name: "Norfolk Lowlands Farm", lat: 52.6309, lng: 1.2974, region: "England - South", type: "Cattle", altitude: 25 },
+  { id: 13, name: "Grampian Heights Farm", lat: 57.1497, lng: -2.0943, region: "Scotland", type: "Sheep", altitude: 520 },
+  { id: 14, name: "Scottish Borders Farm", lat: 55.5447, lng: -2.4339, region: "Scotland", type: "Mixed", altitude: 280 },
+  { id: 15, name: "Pembrokeshire Farm", lat: 51.6736, lng: -4.9139, region: "Wales", type: "Sheep", altitude: 120 }
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
-let farmData = {};          // id → { weather, risk, explanation, scores }
-let markers  = {};          // id → leaflet marker
+let farmData = {};
+let markers  = {};
 let selectedFarm = null;
 let currentRiskFilter   = 'all';
 let currentRegionFilter = 'all';
@@ -809,8 +811,89 @@ function buildExplanation(farm, temp, rain7d, humidity, risk) {
   return `Risk is ${risk.level.toUpperCase()} due to ${factors.slice(0,-1).join(', ')}${factors.length > 1 ? ' and ' : ''}${factors[factors.length-1]}. These conditions favour parasite larval survival on pasture.`;
 }
 
+  // ── PARASITE-SPECIFIC RISK LOGIC ─────────────────────────────────────────────
+function getParasiteRisks(temp, rain7d, humidity, month) {
+  const risks = [];
+  
+  // LIVER FLUKE - loves wet conditions
+  if (rain7d >= 15 || humidity >= 75) {
+    const severity = rain7d >= 30 ? 'HIGH' : rain7d >= 15 ? 'MEDIUM' : 'LOW';
+    risks.push({
+      parasite: 'Liver Fluke',
+      severity: severity,
+      reason: `High rainfall (${rain7d.toFixed(1)}mm over 7 days) creates wet pastures where liver fluke intermediate hosts (mud snails) thrive`,
+      action: 'Test livestock for liver fluke (fecal egg count or blood test). Consider flukicide treatment if positive.',
+      animal: 'Sheep & Cattle',
+      color: severity === 'HIGH' ? '#f85149' : severity === 'MEDIUM' ? '#d29922' : '#3fb950'
+    });
+  }
+  
+  // LUNGWORM - warm temperatures accelerate larvae
+  if (temp >= 10) {
+    const severity = temp >= 15 ? 'HIGH' : 'MEDIUM';
+    risks.push({
+      parasite: 'Lungworm',
+      severity: severity,
+      reason: `Warm temperatures (${temp.toFixed(1)}°C) accelerate lungworm larvae development on pasture`,
+      action: 'Monitor for coughing or labored breathing. Rotate pastures. Consider anthelmintic treatment.',
+      animal: 'Cattle (Dictyocaulus viviparus)',
+      color: severity === 'HIGH' ? '#f85149' : '#d29922'
+    });
+  }
+  
+  // GUT WORMS - humidity + warmth = high survival
+  if (temp >= 10 && humidity >= 60) {
+    const severity = (temp >= 15 && humidity >= 75) ? 'HIGH' : 'MEDIUM';
+    risks.push({
+      parasite: 'Gut Worms (Nematodes)',
+      severity: severity,
+      reason: `Warm (${temp.toFixed(1)}°C) and humid (${humidity.toFixed(0)}%) conditions increase larvae survival on grass`,
+      action: 'Monitor for weight loss, diarrhea, or poor coat condition. Implement rotational grazing. Fecal egg count recommended.',
+      animal: 'Sheep & Cattle',
+      color: severity === 'HIGH' ? '#f85149' : '#d29922'
+    });
+  }
+  
+  // STOMACH WORMS - seasonal risk (spring/autumn)
+  if ([2,3,4,8,9,10].includes(month) && rain7d >= 10) {
+    risks.push({
+      parasite: 'Stomach Worms (Haemonchus)',
+      severity: 'MEDIUM',
+      reason: 'Spring/Autumn season with adequate rainfall supports larvae development',
+      action: 'Avoid overstocking pastures. Monitor livestock for anemia (pale gums/eyelids). Treat if necessary.',
+      animal: 'Sheep (particularly lambs)',
+      color: '#d29922'
+    });
+  }
+  
+  // If no major risks, still show low-level monitoring
+  if (risks.length === 0) {
+    risks.push({
+      parasite: 'General Monitoring',
+      severity: 'LOW',
+      reason: 'Current conditions do not favor major parasite development',
+      action: 'Continue routine monitoring. Maintain good grazing management practices.',
+      animal: 'All livestock',
+      color: '#3fb950'
+    });
+  }
+  
+  return risks;
+}
 // ── MAP SETUP ────────────────────────────────────────────────────────────────
-const map = L.map('map', { center: [54.5, -3.5], zoom: 6, zoomControl: true });
+const UK_BOUNDS = L.latLngBounds(
+  L.latLng(49.5, -8.5),
+  L.latLng(61.0,  2.0)
+);
+const map = L.map('map', {
+  center: [54.5, -3.5],
+  zoom: 6,
+  minZoom: 5,
+  maxZoom: 13,
+  maxBounds: UK_BOUNDS,
+  maxBoundsViscosity: 1.0,
+  zoomControl: true
+});
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
   subdomains: 'abcd', maxZoom: 18
@@ -849,7 +932,7 @@ function makeLoadingIcon() {
 }
 
 // ── PLACE MARKERS ────────────────────────────────────────────────────────────
-FARMS.forEach(farm => {
+farms.forEach(farm => {
   const m = L.marker([farm.lat, farm.lng], { icon: makeLoadingIcon() }).addTo(map);
   m.bindPopup(buildLoadingPopup(farm));
   m.on('click', () => {
@@ -868,17 +951,27 @@ function buildLoadingPopup(farm) {
 
 function buildPopupHTML(farm, d) {
   const c = riskColor(d.risk.level);
+  const month = NOW.getMonth() + 1;
+  const parasiteRisks = getParasiteRisks(d.temp, d.rain7d, d.humidity, month);
+  
+  // Get top 2 parasites
+  const topParasites = parasiteRisks.slice(0, 2);
+  let parasiteList = '';
+  topParasites.forEach(p => {
+    parasiteList += `<div style="font-size:11px;color:#8b949e;margin:4px 0;">● ${p.parasite} - <span style="color:${p.color}">${p.severity}</span></div>`;
+  });
+  
   return `<div class="popup-name">${farm.name}</div>
-    <div class="popup-region">${farm.region} · ${farm.type}</div>
+    <div class="popup-region">${farm.region} · ${farm.type} · ${farm.altitude}m</div>
     <div class="popup-risk" style="background:${c}22;color:${c};border:1px solid ${c}44">
-      ● ${d.risk.level.toUpperCase()} RISK
+      ● ${d.risk.level.toUpperCase()} PARASITE RISK
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
-      🌡 ${d.temp.toFixed(1)}°C &nbsp;|&nbsp; 🌧 ${d.rain7d.toFixed(1)}mm &nbsp;|&nbsp; 💧 ${d.humidity.toFixed(0)}%
+    <div style="margin:8px 0 10px 0;">
+      ${parasiteList}
     </div>
-    <button class="popup-detail-btn" onclick="openDetailById(${farm.id})">View full details →</button>`;
+    <button class="popup-detail-btn" onclick="openDetailById(${farm.id})">View parasite risks & actions →</button>`;
 }
-
+  
 // ── WEATHER FETCH ─────────────────────────────────────────────────────────────
 async function fetchFarmWeather(farm) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${farm.lat}&longitude=${farm.lng}`+
@@ -892,10 +985,9 @@ async function fetchFarmWeather(farm) {
   return { temp, humidity, rain7d };
 }
 
-async function loadAllFarms() {
-  // batch in groups of 3 to avoid hammering the API
-  for (let i = 0; i < FARMS.length; i += 3) {
-    const batch = FARMS.slice(i, i+3);
+async function loadAllfarms() {
+  for (let i = 0; i < farms.length; i += 3) {
+    const batch = farms.slice(i, i+3);
     await Promise.all(batch.map(async farm => {
       try {
         const w = await fetchFarmWeather(farm);
@@ -916,13 +1008,12 @@ async function loadAllFarms() {
     }));
   }
   const loaded = Object.values(farmData).filter(Boolean).length;
-  document.getElementById('liveStatus').textContent =
-    `Live data · ${loaded}/${FARMS.length} farms`;
+  document.getElementById('liveStatus').textContent = `Live data · ${loaded}/${farms.length} farms`;
 }
 
 // ── SIDEBAR FARM LIST ─────────────────────────────────────────────────────────
-function getVisibleFarms() {
-  return FARMS.filter(f => {
+function getVisiblefarms() {
+  return farms.filter(f => {
     if (currentRegionFilter !== 'all' && f.region !== currentRegionFilter) return false;
     const d = farmData[f.id];
     if (!d) return currentRiskFilter === 'all';
@@ -932,30 +1023,42 @@ function getVisibleFarms() {
 }
 
 function renderFarmList() {
-  const list = document.getElementById('farmList');
-  const visible = getVisibleFarms();
-  if (visible.length === 0) {
-    list.innerHTML = `<div class="loading-row" style="color:var(--muted)">No farms match this filter.</div>`;
-    return;
-  }
-  list.innerHTML = visible.map(farm => {
+  const visible = getVisiblefarms();
+  let html = '';
+  
+  visible.forEach(farm => {
     const d = farmData[farm.id];
-    const riskLabel = d ? d.risk.level : '…';
-    const riskClass = d ? `score-${d.risk.level.toLowerCase()}` : '';
-    const dotColor  = d ? riskColor(d.risk.level) : '#8b949e';
-    const isSelected = selectedFarm === farm.id;
-    return `<div class="farm-item${isSelected?' selected':''}" onclick="selectFarm(${farm.id})">
-      <div class="farm-risk-dot" style="background:${dotColor}"></div>
-      <div class="farm-item-info">
-        <div class="farm-item-name">${farm.name}</div>
-        <div class="farm-item-region">${farm.region}</div>
+    let dotColor = '#8b949e';
+    let scoreClass = '';
+    let scoreText = '...';
+    
+    if (d) {
+      dotColor = riskColor(d.risk.level);
+      scoreClass = d.risk.level === 'Low' ? 'score-low' : d.risk.level === 'Medium' ? 'score-medium' : 'score-high';
+      scoreText = d.risk.level.toUpperCase();
+    }
+    
+    const isSelected = selectedFarm === farm.id ? ' selected' : '';
+    
+    html += `
+      <div class="farm-item${isSelected}" onclick="selectFarm(${farm.id})">
+        <div class="farm-risk-dot" style="background:${dotColor}"></div>
+        <div class="farm-item-info">
+          <div class="farm-item-name">${farm.name}</div>
+          <div class="farm-item-region">${farm.region} · ${farm.type} · ${farm.altitude}m</div>
+        </div>
+        <div class="farm-item-score ${scoreClass}">${scoreText}</div>
       </div>
-      <div class="farm-item-score ${riskClass}">${d ? riskLabel : '...'}</div>
-    </div>`;
-  }).join('');
-
-  // update marker visibility
-  FARMS.forEach(farm => {
+    `;
+  });
+  
+  if (html === '') {
+    html = '<div class="loading-row" style="border:none">No farms match filters</div>';
+  }
+  
+  document.getElementById('farmList').innerHTML = html;
+  
+  farms.forEach(farm => {
     const m = markers[farm.id];
     const show = visible.find(f => f.id === farm.id);
     if (show) { if (!map.hasLayer(m)) m.addTo(map); }
@@ -963,7 +1066,7 @@ function renderFarmList() {
   });
 }
 
-function filterFarms() {
+function filterfarms() {
   currentRegionFilter = document.getElementById('regionFilter').value;
   renderFarmList();
 }
@@ -978,7 +1081,7 @@ function filterRisk(level, el) {
 function selectFarm(id) {
   selectedFarm = id;
   renderFarmList();
-  const farm = FARMS.find(f => f.id === id);
+  const farm = farms.find(f => f.id === id);
   map.flyTo([farm.lat, farm.lng], 10, { duration: 0.8 });
   markers[id].openPopup();
   if (farmData[id]) openDetail(id);
@@ -997,7 +1100,7 @@ function openDetailById(id) {
 }
 
 function openDetail(id) {
-  const farm = FARMS.find(f => f.id === id);
+  const farm = farms.find(f => f.id === id);
   const d    = farmData[id];
   if (!d) return;
 
@@ -1006,27 +1109,59 @@ function openDetail(id) {
   document.getElementById('detailPanel').classList.remove('hidden');
 
   const lvl = d.risk.level.toLowerCase();
-  const maxScore = 10;
-  const pct = v => Math.round((v / 3) * 100);
   const barColor = { Low: '#3fb950', Medium: '#d29922', High: '#f85149' }[d.risk.level];
+  
+  // Get parasite-specific risks
+  const month = NOW.getMonth() + 1;
+  const parasiteRisks = getParasiteRisks(d.temp, d.rain7d, d.humidity, month);
+
+  // Build parasite risk cards HTML
+  let parasiteHTML = '';
+  parasiteRisks.forEach(risk => {
+    parasiteHTML += `
+      <div style="background: rgba(22,27,34,0.6); padding: 14px; margin: 10px 0; border-left: 4px solid ${risk.color}; border-radius: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: #e6edf3; font-size: 14px;">${risk.parasite}</strong>
+          <span style="background: ${risk.color}22; color: ${risk.color}; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; font-family: var(--font-mono); letter-spacing: 0.05em;">
+            ${risk.severity} RISK
+          </span>
+        </div>
+        <div style="color: #8b949e; font-size: 12px; margin-bottom: 6px;">
+          <strong>Affects:</strong> ${risk.animal}
+        </div>
+        <div style="color: #8b949e; font-size: 12px; margin-bottom: 10px; line-height: 1.5;">
+          ${risk.reason}
+        </div>
+        <div style="background: rgba(13,17,23,0.8); padding: 10px; border-radius: 6px; border: 1px solid #21262d;">
+          <strong style="color: #3fb950; font-size: 11px;">✓ RECOMMENDED ACTION:</strong>
+          <div style="color: #c9d1d9; font-size: 12px; margin-top: 6px; line-height: 1.5;">
+            ${risk.action}
+          </div>
+        </div>
+      </div>
+    `;
+  });
 
   document.getElementById('detailBody').innerHTML = `
     <div class="risk-banner ${lvl}">
-      <div class="risk-level-label">Parasite Risk Level</div>
+      <div class="risk-level-label">Overall Parasite Risk</div>
       <div class="risk-level-text">${d.risk.level.toUpperCase()}</div>
       <div class="risk-explanation">${d.explanation}</div>
     </div>
 
-    <div class="section-label">Score Breakdown (${d.risk.total} / 10)</div>
+    <div class="section-label">Parasite Risks at This Location</div>
+    ${parasiteHTML}
+
+    <div class="section-label" style="margin-top: 20px;">Score Breakdown (${d.risk.total} / 10)</div>
     <div class="score-bars">
       <div class="score-bar-row">
         <div class="score-bar-label">Temperature</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct(d.risk.scores.temp)}%;background:${barColor}"></div></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.risk.scores.temp/3)*100}%;background:${barColor}"></div></div>
         <div class="score-bar-val">${d.risk.scores.temp}/3</div>
       </div>
       <div class="score-bar-row">
         <div class="score-bar-label">Rainfall (7d)</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct(d.risk.scores.rain)}%;background:${barColor}"></div></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.risk.scores.rain/3)*100}%;background:${barColor}"></div></div>
         <div class="score-bar-val">${d.risk.scores.rain}/3</div>
       </div>
       <div class="score-bar-row">
@@ -1041,7 +1176,7 @@ function openDetail(id) {
       </div>
     </div>
 
-    <div class="section-label">Current Weather</div>
+    <div class="section-label" style="margin-top: 20px;">Current Weather Conditions</div>
     <div class="weather-grid">
       <div class="weather-card">
         <div class="weather-card-label">Temperature</div>
@@ -1056,14 +1191,21 @@ function openDetail(id) {
         <div class="weather-card-val">${d.rain7d.toFixed(1)}<span class="weather-card-unit">mm</span></div>
       </div>
       <div class="weather-card">
-        <div class="weather-card-label">Season</div>
-        <div class="weather-card-val" style="font-size:14px">${SEASON.emoji} ${SEASON.name}</div>
+        <div class="weather-card-label">Altitude</div>
+        <div class="weather-card-val">${farm.altitude}<span class="weather-card-unit">m</span></div>
+      </div>
+    </div>
+
+    <div style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 6px; padding: 12px; margin-top: 16px;">
+      <strong style="color: #fbbf24; font-size: 11px;">⚠️ IMPORTANT DISCLAIMER:</strong>
+      <div style="color: #8b949e; font-size: 11px; margin-top: 6px; line-height: 1.5;">
+        This is a risk assessment tool based on environmental conditions. Always consult a veterinarian before making treatment decisions. Parasite risk is also influenced by stocking density, grazing history, and previous treatments.
       </div>
     </div>
 
     <div class="timestamp">
       Data fetched: ${d.fetchedAt.toLocaleString('en-GB')}<br>
-      Source: Open-Meteo (open-meteo.com) · Rule-based scoring v1.0
+      Source: Open-Meteo (open-meteo.com) · Rule-based scoring v2.0
     </div>`;
 }
 
@@ -1082,7 +1224,7 @@ document.getElementById('modal').addEventListener('click', e => {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 renderFarmList();
-loadAllFarms();
+loadAllfarms();
 </script>
 </body>
 </html>
