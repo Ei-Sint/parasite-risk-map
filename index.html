@@ -733,15 +733,24 @@
 
 <script>
 // ── FARM DATA ────────────────────────────────────────────────────────────────
-const FARMS = [
-  { id:1, name:"Thornfield Farm",   region:"England - North",    type:"Sheep",  lat:54.2069, lng:-1.8014 },
-  { id:2, name:"Moorside Pastures", region:"England - North",    type:"Mixed",  lat:53.6450, lng:-1.7830 },
-  { id:3, name:"Riverside Farm",    region:"England - Midlands", type:"Sheep",  lat:52.9540, lng:-1.1480 },
-  { id:4, name:"Greenacres Farm",   region:"England - Midlands", type:"Cattle", lat:52.1960, lng:-2.2200 },
-  { id:5, name:"Chalk Hill Farm",   region:"England - South",    type:"Mixed",  lat:51.2802, lng:-1.0870 },
-  { id:6, name:"Downland Farm",     region:"England - South",    type:"Cattle", lat:50.8503, lng:-0.1270 },
-  { id:7, name:"Glen Carron Farm",  region:"Scotland",           type:"Sheep",  lat:57.5050, lng:-5.1800 },
-  { id:8, name:"Cambrian Hill Farm",region:"Wales",              type:"Sheep",  lat:52.5780, lng:-3.6510 },
+const farms = [
+  { name: "Snowdonia Farm", lat: 53.0685, lng: -4.0762, region: "Wales", type: "Sheep", altitude: 350 },
+  { name: "Lakeland View Farm", lat: 54.4609, lng: -3.0886, region: "England North", type: "Cattle", altitude: 180 },
+  { name: "Pennine Ridge Farm", lat: 53.8271, lng: -2.0982, region: "England North", type: "Mixed", altitude: 420 },
+  { name: "Somerset Levels Farm", lat: 51.0881, lng: -2.8932, region: "England South", type: "Cattle", altitude: 15 },
+  { name: "Cornwall Coastal Farm", lat: 50.2660, lng: -5.0527, region: "England South", type: "Sheep", altitude: 95 },
+  { name: "Cotswold Farm", lat: 51.8330, lng: -1.8526, region: "England South", type: "Sheep", altitude: 210 },
+  { name: "Cairngorm Hill Farm", lat: 57.0883, lng: -3.6778, region: "Scotland", type: "Sheep", altitude: 580 },
+  { name: "Brecon Beacons Farm", lat: 51.8838, lng: -3.4360, region: "Wales", type: "Mixed", altitude: 390 },
+  
+  // NEW FARMS (to reach 15 total):
+  { name: "Yorkshire Dales Farm", lat: 54.2406, lng: -2.0728, region: "England North", type: "Sheep", altitude: 320 },
+  { name: "Peak District Farm", lat: 53.3478, lng: -1.8158, region: "England North", type: "Mixed", altitude: 380 },
+  { name: "Dartmoor Farm", lat: 50.5719, lng: -3.9289, region: "England South", type: "Cattle", altitude: 450 },
+  { name: "Norfolk Lowlands Farm", lat: 52.6309, lng: 1.2974, region: "England South", type: "Cattle", altitude: 25 },
+  { name: "Grampian Heights Farm", lat: 57.1497, lng: -2.0943, region: "Scotland", type: "Sheep", altitude: 520 },
+  { name: "Scottish Borders Farm", lat: 55.5447, lng: -2.4339, region: "Scotland", type: "Mixed", altitude: 280 },
+  { name: "Pembrokeshire Farm", lat: 51.6736, lng: -4.9139, region: "Wales", type: "Sheep", altitude: 120 }
 ];
 
 // ── STATE ────────────────────────────────────────────────────────────────────
