@@ -1099,27 +1099,59 @@ function openDetail(id) {
   document.getElementById('detailPanel').classList.remove('hidden');
 
   const lvl = d.risk.level.toLowerCase();
-  const maxScore = 10;
-  const pct = v => Math.round((v / 3) * 100);
   const barColor = { Low: '#3fb950', Medium: '#d29922', High: '#f85149' }[d.risk.level];
+  
+  // Get parasite-specific risks
+  const month = NOW.getMonth() + 1;
+  const parasiteRisks = getParasiteRisks(d.temp, d.rain7d, d.humidity, month);
+
+  // Build parasite risk cards HTML
+  let parasiteHTML = '';
+  parasiteRisks.forEach(risk => {
+    parasiteHTML += `
+      <div style="background: rgba(22,27,34,0.6); padding: 14px; margin: 10px 0; border-left: 4px solid ${risk.color}; border-radius: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: #e6edf3; font-size: 14px;">${risk.parasite}</strong>
+          <span style="background: ${risk.color}22; color: ${risk.color}; padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; font-family: var(--font-mono); letter-spacing: 0.05em;">
+            ${risk.severity} RISK
+          </span>
+        </div>
+        <div style="color: #8b949e; font-size: 12px; margin-bottom: 6px;">
+          <strong>Affects:</strong> ${risk.animal}
+        </div>
+        <div style="color: #8b949e; font-size: 12px; margin-bottom: 10px; line-height: 1.5;">
+          ${risk.reason}
+        </div>
+        <div style="background: rgba(13,17,23,0.8); padding: 10px; border-radius: 6px; border: 1px solid #21262d;">
+          <strong style="color: #3fb950; font-size: 11px;">✓ RECOMMENDED ACTION:</strong>
+          <div style="color: #c9d1d9; font-size: 12px; margin-top: 6px; line-height: 1.5;">
+            ${risk.action}
+          </div>
+        </div>
+      </div>
+    `;
+  });
 
   document.getElementById('detailBody').innerHTML = `
     <div class="risk-banner ${lvl}">
-      <div class="risk-level-label">Parasite Risk Level</div>
+      <div class="risk-level-label">Overall Parasite Risk</div>
       <div class="risk-level-text">${d.risk.level.toUpperCase()}</div>
       <div class="risk-explanation">${d.explanation}</div>
     </div>
 
-    <div class="section-label">Score Breakdown (${d.risk.total} / 10)</div>
+    <div class="section-label">Parasite Risks at This Location</div>
+    ${parasiteHTML}
+
+    <div class="section-label" style="margin-top: 20px;">Score Breakdown (${d.risk.total} / 10)</div>
     <div class="score-bars">
       <div class="score-bar-row">
         <div class="score-bar-label">Temperature</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct(d.risk.scores.temp)}%;background:${barColor}"></div></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.risk.scores.temp/3)*100}%;background:${barColor}"></div></div>
         <div class="score-bar-val">${d.risk.scores.temp}/3</div>
       </div>
       <div class="score-bar-row">
         <div class="score-bar-label">Rainfall (7d)</div>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct(d.risk.scores.rain)}%;background:${barColor}"></div></div>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${(d.risk.scores.rain/3)*100}%;background:${barColor}"></div></div>
         <div class="score-bar-val">${d.risk.scores.rain}/3</div>
       </div>
       <div class="score-bar-row">
@@ -1134,7 +1166,7 @@ function openDetail(id) {
       </div>
     </div>
 
-    <div class="section-label">Current Weather</div>
+    <div class="section-label" style="margin-top: 20px;">Current Weather Conditions</div>
     <div class="weather-grid">
       <div class="weather-card">
         <div class="weather-card-label">Temperature</div>
@@ -1149,14 +1181,21 @@ function openDetail(id) {
         <div class="weather-card-val">${d.rain7d.toFixed(1)}<span class="weather-card-unit">mm</span></div>
       </div>
       <div class="weather-card">
-        <div class="weather-card-label">Season</div>
-        <div class="weather-card-val" style="font-size:14px">${SEASON.emoji} ${SEASON.name}</div>
+        <div class="weather-card-label">Altitude</div>
+        <div class="weather-card-val">${farm.altitude}<span class="weather-card-unit">m</span></div>
+      </div>
+    </div>
+
+    <div style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 6px; padding: 12px; margin-top: 16px;">
+      <strong style="color: #fbbf24; font-size: 11px;">⚠️ IMPORTANT DISCLAIMER:</strong>
+      <div style="color: #8b949e; font-size: 11px; margin-top: 6px; line-height: 1.5;">
+        This is a risk assessment tool based on environmental conditions. Always consult a veterinarian before making treatment decisions. Parasite risk is also influenced by stocking density, grazing history, and previous treatments.
       </div>
     </div>
 
     <div class="timestamp">
       Data fetched: ${d.fetchedAt.toLocaleString('en-GB')}<br>
-      Source: Open-Meteo (open-meteo.com) · Rule-based scoring v1.0
+      Source: Open-Meteo (open-meteo.com) · Rule-based scoring v2.0
     </div>`;
 }
 
