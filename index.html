@@ -811,6 +811,75 @@ function buildExplanation(farm, temp, rain7d, humidity, risk) {
   return `Risk is ${risk.level.toUpperCase()} due to ${factors.slice(0,-1).join(', ')}${factors.length > 1 ? ' and ' : ''}${factors[factors.length-1]}. These conditions favour parasite larval survival on pasture.`;
 }
 
+  // ── PARASITE-SPECIFIC RISK LOGIC ─────────────────────────────────────────────
+function getParasiteRisks(temp, rain7d, humidity, month) {
+  const risks = [];
+  
+  // LIVER FLUKE - loves wet conditions
+  if (rain7d >= 15 || humidity >= 75) {
+    const severity = rain7d >= 30 ? 'HIGH' : rain7d >= 15 ? 'MEDIUM' : 'LOW';
+    risks.push({
+      parasite: 'Liver Fluke',
+      severity: severity,
+      reason: `High rainfall (${rain7d.toFixed(1)}mm over 7 days) creates wet pastures where liver fluke intermediate hosts (mud snails) thrive`,
+      action: 'Test livestock for liver fluke (fecal egg count or blood test). Consider flukicide treatment if positive.',
+      animal: 'Sheep & Cattle',
+      color: severity === 'HIGH' ? '#f85149' : severity === 'MEDIUM' ? '#d29922' : '#3fb950'
+    });
+  }
+  
+  // LUNGWORM - warm temperatures accelerate larvae
+  if (temp >= 10) {
+    const severity = temp >= 15 ? 'HIGH' : 'MEDIUM';
+    risks.push({
+      parasite: 'Lungworm',
+      severity: severity,
+      reason: `Warm temperatures (${temp.toFixed(1)}°C) accelerate lungworm larvae development on pasture`,
+      action: 'Monitor for coughing or labored breathing. Rotate pastures. Consider anthelmintic treatment.',
+      animal: 'Cattle (Dictyocaulus viviparus)',
+      color: severity === 'HIGH' ? '#f85149' : '#d29922'
+    });
+  }
+  
+  // GUT WORMS - humidity + warmth = high survival
+  if (temp >= 10 && humidity >= 60) {
+    const severity = (temp >= 15 && humidity >= 75) ? 'HIGH' : 'MEDIUM';
+    risks.push({
+      parasite: 'Gut Worms (Nematodes)',
+      severity: severity,
+      reason: `Warm (${temp.toFixed(1)}°C) and humid (${humidity.toFixed(0)}%) conditions increase larvae survival on grass`,
+      action: 'Monitor for weight loss, diarrhea, or poor coat condition. Implement rotational grazing. Fecal egg count recommended.',
+      animal: 'Sheep & Cattle',
+      color: severity === 'HIGH' ? '#f85149' : '#d29922'
+    });
+  }
+  
+  // STOMACH WORMS - seasonal risk (spring/autumn)
+  if ([2,3,4,8,9,10].includes(month) && rain7d >= 10) {
+    risks.push({
+      parasite: 'Stomach Worms (Haemonchus)',
+      severity: 'MEDIUM',
+      reason: 'Spring/Autumn season with adequate rainfall supports larvae development',
+      action: 'Avoid overstocking pastures. Monitor livestock for anemia (pale gums/eyelids). Treat if necessary.',
+      animal: 'Sheep (particularly lambs)',
+      color: '#d29922'
+    });
+  }
+  
+  // If no major risks, still show low-level monitoring
+  if (risks.length === 0) {
+    risks.push({
+      parasite: 'General Monitoring',
+      severity: 'LOW',
+      reason: 'Current conditions do not favor major parasite development',
+      action: 'Continue routine monitoring. Maintain good grazing management practices.',
+      animal: 'All livestock',
+      color: '#3fb950'
+    });
+  }
+  
+  return risks;
+}
 // ── MAP SETUP ────────────────────────────────────────────────────────────────
 const UK_BOUNDS = L.latLngBounds(
   L.latLng(49.5, -8.5),
