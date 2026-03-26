@@ -947,28 +947,30 @@ function getVisiblefarms() {
   });
 }
 
-function renderfarmList() {
-  const list = document.getElementById('farmList');
-  const visible = getVisiblefarms();
-  if (visible.length === 0) {
-    list.innerHTML = `<div class="loading-row" style="color:var(--muted)">No farms match this filter.</div>`;
-    return;
-  }
-  list.innerHTML = visible.map(farm => {
-    const d = farmData[farm.id];
-    const riskLabel = d ? d.risk.level : '…';
-    const riskClass = d ? `score-${d.risk.level.toLowerCase()}` : '';
-    const dotColor  = d ? riskColor(d.risk.level) : '#8b949e';
-    const isSelected = selectedFarm === farm.id;
-    return `<div class="farm-item${isSelected?' selected':''}" onclick="selectFarm(${farm.id})">
-      <div class="farm-risk-dot" style="background:${dotColor}"></div>
-      <div class="farm-item-info">
-        <div class="farm-item-name">${farm.name}</div>
-        <div class="farm-item-region">${farm.region}</div>
-      </div>
-      <div class="farm-item-score ${riskClass}">${d ? riskLabel : '...'}</div>
-    </div>`;
-  }).join('');
+function renderFarmList() {
+  const farmListDiv = document.getElementById('farm-list');
+  if (!farmListDiv) return;
+  
+  let html = '<div style="padding: 10px;"><h3 style="margin: 0 0 10px 0; color: #0f172a;">Farm Locations (' + farms.length + ')</h3><ul style="list-style: none; padding: 0; margin: 0;">';
+  
+  farms.forEach(farm => {
+    const riskColor = '#64748b'; // Default grey until weather loads
+    html += `
+      <li style="padding: 10px; margin: 6px 0; background: #f8fafc; border-radius: 6px; border-left: 4px solid ${riskColor}; cursor: pointer; transition: background 0.2s;" 
+          onmouseover="this.style.background='#e2e8f0'" 
+          onmouseout="this.style.background='#f8fafc'"
+          onclick="flyToFarm('${farm.name}')">
+        <div style="font-weight: bold; color: #1e293b; margin-bottom: 4px;">${farm.name}</div>
+        <div style="font-size: 12px; color: #64748b;">
+          ${farm.region} • ${farm.type} • ${farm.altitude}m
+        </div>
+      </li>
+    `;
+  });
+  
+  html += '</ul></div>';
+  farmListDiv.innerHTML = html;
+}
 
   // update marker visibility
   farms.forEach(farm => {
