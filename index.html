@@ -656,7 +656,7 @@
     <div class="sidebar-head">
       <div class="sidebar-title">Farm Locations</div>
       <div class="filter-row">
-        <select class="filter-select" id="regionFilter" onchange="filterFarms()">
+        <select class="filter-select" id="regionFilter" onchange="filterfarms()">
           <option value="all">All Regions</option>
           <option value="England - North">England – North</option>
           <option value="England - Midlands">England – Midlands</option>
@@ -743,7 +743,7 @@ const farms = [
   { name: "Cairngorm Hill Farm", lat: 57.0883, lng: -3.6778, region: "Scotland", type: "Sheep", altitude: 580 },
   { name: "Brecon Beacons Farm", lat: 51.8838, lng: -3.4360, region: "Wales", type: "Mixed", altitude: 390 },
   
-  // NEW FARMS (to reach 15 total):
+  // NEW farms (to reach 15 total):
   { name: "Yorkshire Dales Farm", lat: 54.2406, lng: -2.0728, region: "England North", type: "Sheep", altitude: 320 },
   { name: "Peak District Farm", lat: 53.3478, lng: -1.8158, region: "England North", type: "Mixed", altitude: 380 },
   { name: "Dartmoor Farm", lat: 50.5719, lng: -3.9289, region: "England South", type: "Cattle", altitude: 450 },
@@ -908,10 +908,10 @@ async function fetchFarmWeather(farm) {
   return { temp, humidity, rain7d };
 }
 
-async function loadAllFarms() {
+async function loadAllfarms() {
   // batch in groups of 3 to avoid hammering the API
-  for (let i = 0; i < FARMS.length; i += 3) {
-    const batch = FARMS.slice(i, i+3);
+  for (let i = 0; i < farms.length; i += 3) {
+    const batch = farms.slice(i, i+3);
     await Promise.all(batch.map(async farm => {
       try {
         const w = await fetchFarmWeather(farm);
@@ -933,12 +933,12 @@ async function loadAllFarms() {
   }
   const loaded = Object.values(farmData).filter(Boolean).length;
   document.getElementById('liveStatus').textContent =
-    `Live data · ${loaded}/${FARMS.length} farms`;
+    `Live data · ${loaded}/${farms.length} farms`;
 }
 
 // ── SIDEBAR FARM LIST ─────────────────────────────────────────────────────────
-function getVisibleFarms() {
-  return FARMS.filter(f => {
+function getVisiblefarms() {
+  return farms.filter(f => {
     if (currentRegionFilter !== 'all' && f.region !== currentRegionFilter) return false;
     const d = farmData[f.id];
     if (!d) return currentRiskFilter === 'all';
@@ -947,9 +947,9 @@ function getVisibleFarms() {
   });
 }
 
-function renderFarmList() {
+function renderfarmList() {
   const list = document.getElementById('farmList');
-  const visible = getVisibleFarms();
+  const visible = getVisiblefarms();
   if (visible.length === 0) {
     list.innerHTML = `<div class="loading-row" style="color:var(--muted)">No farms match this filter.</div>`;
     return;
@@ -971,7 +971,7 @@ function renderFarmList() {
   }).join('');
 
   // update marker visibility
-  FARMS.forEach(farm => {
+  farms.forEach(farm => {
     const m = markers[farm.id];
     const show = visible.find(f => f.id === farm.id);
     if (show) { if (!map.hasLayer(m)) m.addTo(map); }
@@ -979,7 +979,7 @@ function renderFarmList() {
   });
 }
 
-function filterFarms() {
+function filterfarms() {
   currentRegionFilter = document.getElementById('regionFilter').value;
   renderFarmList();
 }
@@ -994,7 +994,7 @@ function filterRisk(level, el) {
 function selectFarm(id) {
   selectedFarm = id;
   renderFarmList();
-  const farm = FARMS.find(f => f.id === id);
+  const farm = farms.find(f => f.id === id);
   map.flyTo([farm.lat, farm.lng], 10, { duration: 0.8 });
   markers[id].openPopup();
   if (farmData[id]) openDetail(id);
@@ -1013,7 +1013,7 @@ function openDetailById(id) {
 }
 
 function openDetail(id) {
-  const farm = FARMS.find(f => f.id === id);
+  const farm = farms.find(f => f.id === id);
   const d    = farmData[id];
   if (!d) return;
 
@@ -1098,7 +1098,7 @@ document.getElementById('modal').addEventListener('click', e => {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 renderFarmList();
-loadAllFarms();
+loadAllfarms();
 </script>
 </body>
 </html>
