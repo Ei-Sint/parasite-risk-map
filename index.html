@@ -865,7 +865,7 @@ function makeLoadingIcon() {
 }
 
 // ── PLACE MARKERS ────────────────────────────────────────────────────────────
-FARMS.forEach(farm => {
+farms.forEach(farm => {
   const m = L.marker([farm.lat, farm.lng], { icon: makeLoadingIcon() }).addTo(map);
   m.bindPopup(buildLoadingPopup(farm));
   m.on('click', () => {
