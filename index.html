@@ -951,17 +951,27 @@ function buildLoadingPopup(farm) {
 
 function buildPopupHTML(farm, d) {
   const c = riskColor(d.risk.level);
+  const month = NOW.getMonth() + 1;
+  const parasiteRisks = getParasiteRisks(d.temp, d.rain7d, d.humidity, month);
+  
+  // Get top 2 parasites
+  const topParasites = parasiteRisks.slice(0, 2);
+  let parasiteList = '';
+  topParasites.forEach(p => {
+    parasiteList += `<div style="font-size:11px;color:#8b949e;margin:4px 0;">● ${p.parasite} - <span style="color:${p.color}">${p.severity}</span></div>`;
+  });
+  
   return `<div class="popup-name">${farm.name}</div>
-    <div class="popup-region">${farm.region} · ${farm.type}</div>
+    <div class="popup-region">${farm.region} · ${farm.type} · ${farm.altitude}m</div>
     <div class="popup-risk" style="background:${c}22;color:${c};border:1px solid ${c}44">
-      ● ${d.risk.level.toUpperCase()} RISK
+      ● ${d.risk.level.toUpperCase()} PARASITE RISK
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">
-      🌡 ${d.temp.toFixed(1)}°C &nbsp;|&nbsp; 🌧 ${d.rain7d.toFixed(1)}mm &nbsp;|&nbsp; 💧 ${d.humidity.toFixed(0)}%
+    <div style="margin:8px 0 10px 0;">
+      ${parasiteList}
     </div>
-    <button class="popup-detail-btn" onclick="openDetailById(${farm.id})">View full details →</button>`;
+    <button class="popup-detail-btn" onclick="openDetailById(${farm.id})">View parasite risks & actions →</button>`;
 }
-
+  
 // ── WEATHER FETCH ─────────────────────────────────────────────────────────────
 async function fetchFarmWeather(farm) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${farm.lat}&longitude=${farm.lng}`+
