@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasture & Parasite Risk Map </title>
+</head>
+    <body>
+      <header>
+        <h1>Parasite Risk Map </h1>
+        <button id="theme-toggle">🌙 Dark Mode</button>
+        
+      </header>
+      <main class = "app-container">
+        <aside class = "sidebar">
+            
+            <h2>Filters </h2>
+            <p>Explore the distribution of parasite risk with our interactive map across UK. This tool visualizes the prevalence of various parasites across different regions, helping you understand where certain parasites are more common and the potential risks associated with them. Use the filters to customize your view and gain insights into parasite distribution patterns.</p>
+            
+            <label for="region-filter">Region:</label>
+            
+            <select id="region-filter">
+                <option value="all">All Regions </option>
+                <option value="north">North England </option>
+                <option value="south">South England </option>
+                <option value="scotland"> Scotland </option>
+                <option value="wales"> Wales </option>
+                <option value="ireland"> Northern Ireland </option>
+            </select>
+
+            <div class="compare-toggle">
+                <input type = "checkbox" id="compare-toggle-checkbox">
+                <label for="compare-toggle-checkbox">Compare Regions</label>
+            </div>
+
+            <h2>Farms Locations </h2>
+            <ul id="farm-list">
+                 <li data-id="1" data-region="north">Highfield Farm - North Yorkshire</li>
+                 <li data-id="2" data-region="north">Meadowbrook Estate - Lancashire</li>
+                 <li data-id="3" data-region="north">Riverside Pastures - Cumbria</li>
+                 <li data-id="4" data-region="north">Green Acres - Cheshire</li>
+                 <li data-id="5" data-region="north">Hilltop Farm - Derbyshire</li>
+                 <li data-id="6" data-region="wales">Oakwood Farm - Shropshire</li>
+                 <li data-id="7" data-region="wales">Valley View - Herefordshire</li>
+                 <li data-id="8" data-region="south">Sunny Meadows - Gloucestershire</li>
+                 <li data-id="9" data-region="south">Willow Creek - Somerset</li>
+                 <li data-id="10" data-region="south">Stonegate Farm - Devon</li>
+                 <li data-id="11" data-region="north">Pennine View - West Yorkshire</li>
+                 <li data-id="12" data-region="north">Lakeside Farm - Lake District</li>
+                 <li data-id="13" data-region="scotland">Border Farm - Scottish Borders</li>
+                 <li data-id="14" data-region="wales">Welsh Hills Farm - Powys</li>
+                 <li data-id="15" data-region="wales">Coastal Pastures - Pembrokeshire</li>
+            </ul> 
+           <!--- I added data id and data region custom attributes to each farm list item for filtering -->
+        </aside>
+        
+        <section class = "map-section">
+            <div id="map">
+                <!-- Map will be inserted here -->
+            </div>
+            
+            <div id ="timeline-chart">
+                <!-- 7days risk timeline chart will be here -->
+                <h3>Risk Over the Past 7 Days Chart</h3>
+                <p> Select a farm to view its risk timeline</p>
+            </div>
+        </section>
+
+        <aside class = "detail-panel">
+            <h3>Farm Details</h3>
+            <p class ="no-selection">Click a farm to see details</p>
+
+        <div class ="farm-details" id ="farm-details">
+            <!-- Farm details will be shown here when a farm is selected -->
+             <h3 id="farm-name">Farm Name</h3>
+             <p id="farm-location">Location </p> 
+            
+
+            <div class ="risk-display">
+                <h4>Current Risk Level</h4>
+                <p id="risk-level">Risk Level: - </p>
+                <p id="risk-score">Risk Score: -/10 </p>
+            </div>
+            
+            <div class="parasite-risks">
+                <h4>Parasite Risk Breakdown</h4>
+                <ul id="parasite-list">
+                    <!-- Parasite risk breakdown with types of species will be listed here -->
+                     <li>
+                        <span class="parasite-name">Liver Fluke</span>
+                        <span class="parasite-risk" id="liver-fluke-risk">- </span>
+                     </li>
+                     <li>
+                        <span class="parasite-name">Lungworm</span>
+                        <span class="parasite-risk" id="lungworm-risk">- </span>
+                     </li>
+                     <li>
+                        <span class="parasite-name">Gut-worm</span>
+                        <span class="parasite-risk" id="gut-worm-risk">- </span>
+                     </li>
+                     <li>
+                        <span class="parasite-name">Coccidia</span>
+                        <span class="parasite-risk" id="coccidia-risk">- </span>
+                     </li>
+                </ul>
+            </div>
+
+            <div class="recommendations">
+                <h4>Recommendations</h4>
+                <ul id="recommendation-list">
+                    <li> Select a farm to view recommendations</li> <!-- Recommendations will be listed here based on the risk levels when a farm is selected -->
+                </ul>
+            </div>
+
+            <div class="weather-data">
+                <h4>Current Weather Conditions</h4>
+                <p id="temperature">Temperature: - °C </p>
+                <p id="humidity">Humidity: - % </p>
+                <p id="rainfall">Rainfall(7 days): - mm </p>
+                <p id="season">Season: - </p>
+            </div>
+
+            
+           
+        </div>
+        </aside> 
+
+
+      </main>
+    </body>
+</html>
