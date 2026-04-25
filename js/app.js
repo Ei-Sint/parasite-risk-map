@@ -517,3 +517,21 @@ function generateRecommendations(parasiteRisks, weather) {
     
     return recommendations;
 }
+
+// ========================================
+// CLOSE DETAIL PANEL
+// ========================================
+
+const closePanel = document.getElementById('close-panel');
+
+closePanel.addEventListener('click', function() {
+    // Hide the detail panel
+    appContainer.classList.remove('detail-open');
+    
+    // Remove selected highlight from farm list
+    const allFarms = farmList.querySelectorAll('li');
+    allFarms.forEach(li => li.classList.remove('selected'));
+    
+    // Reset map view to show all UK
+    map.setView([54.0, -2.5], 6);
+});
