@@ -203,7 +203,6 @@ async function showFarmDetails(farmId) {
     const farm = farms.find(f => f.id === farmId);
     
     if (!farm) return;
-    
     // Show the detail panel
     appContainer.classList.add('detail-open');
     
@@ -226,77 +225,56 @@ async function showFarmDetails(farmId) {
     document.getElementById('temperature').textContent = 'Temperature: Loading...';
     document.getElementById('humidity').textContent = 'Humidity: Loading...';
     document.getElementById('rainfall').textContent = 'Rainfall: Loading...';
+    document.getElementById('risk-level').textContent = 'Risk Level: Loading...';
+    document.getElementById('risk-score').textContent = 'Risk Score: Loading...';
     
-    // Fetch and display weather data
+    // Fetch weather data
     const weather = await fetchWeather(farm.lat, farm.lng);
-    
     if (weather) {
+        // Display weather
         document.getElementById('temperature').textContent = `Temperature: ${weather.temperature}°C`;
         document.getElementById('humidity').textContent = `Humidity: ${weather.humidity}%`;
         document.getElementById('rainfall').textContent = `Rainfall (7 days): ${weather.rainfall}mm`;
         document.getElementById('season').textContent = `Season: ${getCurrentSeason()}`;
+        
+        // Calculate and display overall risk
+        const risk = calculateRisk(weather, getCurrentSeason());
+        document.getElementById('risk-level').textContent = `Risk Level: ${risk.level}`;
+        document.getElementById('risk-score').textContent = `Risk Score: ${risk.score}/10`;
+        
+        // Calculate parasite-specific risks
+        const parasiteRisks = calculateParasiteRisks(weather, getCurrentSeason());
+        
+        // Helper to set risk with color
+        function setRiskWithColor(elementId, riskLevel) {
+            const el = document.getElementById(elementId);
+            el.textContent = riskLevel;
+            el.className = 'parasite-risk';
+            if (riskLevel === 'LOW') el.classList.add('risk-low');
+            if (riskLevel === 'MEDIUM') el.classList.add('risk-medium');
+            if (riskLevel === 'HIGH') el.classList.add('risk-high');
+        }
+        
+        setRiskWithColor('liver-fluke-risk', parasiteRisks.liverFluke);
+        setRiskWithColor('lungworm-risk', parasiteRisks.lungworm);
+        setRiskWithColor('gut-worm-risk', parasiteRisks.gutWorm);
+        setRiskWithColor('coccidia-risk', parasiteRisks.coccidia);
+        
+        // Generate and display recommendations
+        const recommendations = generateRecommendations(parasiteRisks, weather);
+        const recommendationList = document.getElementById('recommendation-list');
+        recommendationList.innerHTML = '';
+        
+        recommendations.forEach(rec => {
+            const li = document.createElement('li');
+            li.textContent = rec;
+            recommendationList.appendChild(li);
+        });
+        
     } else {
         document.getElementById('temperature').textContent = 'Temperature: Error';
         document.getElementById('humidity').textContent = 'Humidity: Error';
         document.getElementById('rainfall').textContent = 'Rainfall: Error';
-    }
-
-   // Calculate parasite-specific risks with colors
-const parasiteRisks = calculateParasiteRisks(weather, getCurrentSeason());
-
-// Helper to set risk with color
-function setRiskWithColor(elementId, riskLevel) {
-    const el = document.getElementById(elementId);
-    el.textContent = riskLevel;
-    el.className = 'parasite-risk'; // Reset classes
-    if (riskLevel === 'LOW') el.classList.add('risk-low');
-    if (riskLevel === 'MEDIUM') el.classList.add('risk-medium');
-    if (riskLevel === 'HIGH') el.classList.add('risk-high');
-}
-
-setRiskWithColor('liver-fluke-risk', parasiteRisks.liverFluke);
-setRiskWithColor('lungworm-risk', parasiteRisks.lungworm);
-setRiskWithColor('gut-worm-risk', parasiteRisks.gutWorm);
-setRiskWithColor('coccidia-risk', parasiteRisks.coccidia);
-}
-
-// ========================================
-// FARM LIST CLICK - Uses the function above
-// ========================================
-
-farmList.addEventListener('click', function(event) {
-    const clickedItem = event.target.closest('li');
-    if (!clickedItem) return;
-    
-    const farmId = parseInt(clickedItem.dataset.id);
-    showFarmDetails(farmId);
-});
-
-// ========================================
-// WEATHER API - Fetch real weather data
-// ========================================
-
-async function fetchWeather(lat, lng) {
-    // Build the API URL with coordinates
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=Europe/London`;
-    
-    try {
-        // Fetch data from API
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        // Extract the values we need
-        const weather = {
-            temperature: data.current.temperature_2m,
-            humidity: data.current.relative_humidity_2m,
-            rainfall: data.daily.precipitation_sum.slice(0, 7).reduce((a, b) => a + b, 0).toFixed(1)
-        };
-        
-        return weather;
-        
-    } catch (error) {
-        console.error('Weather fetch error:', error);
-        return null;
     }
 }
 
@@ -334,44 +312,6 @@ async function fetchWeather(lat, lng) {
 
 function getCurrentSeason() {
     const month = new Date().getMonth(); // 0-11
-    
-    if (month >= 2 && month <= 4) return 'Spring';
-    if (month >= 5 && month <= 7) return 'Summer';
-    if (month >= 8 && month <= 10) return 'Autumn';
-    return 'Winter';
-}
-
-// ========================================
-// WEATHER API - Fetch real weather data
-// ========================================
-
-async function fetchWeather(lat, lng) {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=Europe/London`;
-    
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        const weather = {
-            temperature: data.current.temperature_2m,
-            humidity: data.current.relative_humidity_2m,
-            rainfall: data.daily.precipitation_sum.slice(0, 7).reduce((a, b) => a + b, 0).toFixed(1)
-        };
-        
-        return weather;
-        
-    } catch (error) {
-        console.error('Weather fetch error:', error);
-        return null;
-    }
-}
-
-// ========================================
-// HELPER - Get current season
-// ========================================
-
-function getCurrentSeason() {
-    const month = new Date().getMonth();
     
     if (month >= 2 && month <= 4) return 'Spring';
     if (month >= 5 && month <= 7) return 'Summer';
@@ -456,24 +396,35 @@ function calculateParasiteRisks(weather, season) {
 }
 
 // ========================================
-// CUSTOM MARKERS - Colored by risk level, keep old pin style
+// CUSTOM MARKERS - Colored by risk level
 // ========================================
 
-function createColoredIcon(color) {
-    return L.icon({
-        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+function createColoredIcon(riskLevel) {
+    const colors = {
+        LOW: '#4caf50',      // Green
+        MEDIUM: '#ff9800',   // Orange  
+        HIGH: '#f44336'      // Red
+    };
+    
+    const color = colors[riskLevel] || '#2196f3'; // Blue default
+    
+    return L.divIcon({
+        className: 'custom-marker',
+        html: `<svg width="25" height="41" viewBox="0 0 25 41">
+            <path fill="${color}" stroke="#fff" stroke-width="2" d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z"/>
+            <circle fill="#fff" cx="12.5" cy="12.5" r="5"/>
+        </svg>`,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
+        popupAnchor: [1, -34]
     });
 }
 
 const riskIcons = {
-    LOW: createColoredIcon('green'),
-    MEDIUM: createColoredIcon('orange'),
-    HIGH: createColoredIcon('red')
+    LOW: createColoredIcon('LOW'),
+    MEDIUM: createColoredIcon('MEDIUM'),
+    HIGH: createColoredIcon('HIGH'),
+    DEFAULT: createColoredIcon('DEFAULT')
 };
 
 // ========================================
@@ -482,17 +433,19 @@ const riskIcons = {
 
 async function initializeFarmMarkers() {
     for (const farm of farms) {
+        // Set default icon first
+        markers[farm.id].setIcon(riskIcons.DEFAULT);
+        
         // Fetch weather for this farm
         const weather = await fetchWeather(farm.lat, farm.lng);
         
         if (weather) {
-            // Calculate risk
             const risk = calculateRisk(weather, getCurrentSeason());
             
-            // Update marker icon based on risk
+            // Update marker with risk color
             markers[farm.id].setIcon(riskIcons[risk.level]);
             
-            // Store risk data on farm object for later use
+            // Store data on farm object
             farm.weather = weather;
             farm.risk = risk;
         }
@@ -507,3 +460,60 @@ async function initializeFarmMarkers() {
 
 // Load risk data for all farms when page loads
 initializeFarmMarkers();
+
+// ========================================
+// RECOMMENDATIONS - Generate advice based on risks
+// ========================================
+
+function generateRecommendations(parasiteRisks, weather) {
+    const recommendations = [];
+    
+    // Liver Fluke recommendations
+    if (parasiteRisks.liverFluke === 'HIGH') {
+        recommendations.push('🔴 Treat livestock for liver fluke immediately');
+        recommendations.push('🔴 Avoid grazing on wet pastures');
+    } else if (parasiteRisks.liverFluke === 'MEDIUM') {
+        recommendations.push('🟡 Monitor for liver fluke - consider testing');
+    }
+    
+    // Lungworm recommendations
+    if (parasiteRisks.lungworm === 'HIGH') {
+        recommendations.push('🔴 Vaccinate cattle for lungworm');
+        recommendations.push('🔴 Monitor young stock for coughing');
+    } else if (parasiteRisks.lungworm === 'MEDIUM') {
+        recommendations.push('🟡 Keep watch for lungworm symptoms');
+    }
+    
+    // Gut Worm recommendations
+    if (parasiteRisks.gutWorm === 'HIGH') {
+        recommendations.push('🔴 Implement rotational grazing');
+        recommendations.push('🔴 Conduct faecal egg counts');
+    } else if (parasiteRisks.gutWorm === 'MEDIUM') {
+        recommendations.push('🟡 Consider faecal testing for gut worms');
+    }
+    
+    // Coccidia recommendations
+    if (parasiteRisks.coccidia === 'HIGH') {
+        recommendations.push('🔴 Treat young animals for coccidiosis');
+        recommendations.push('🔴 Improve housing hygiene');
+    } else if (parasiteRisks.coccidia === 'MEDIUM') {
+        recommendations.push('🟡 Monitor young stock for coccidia signs');
+    }
+    
+    // General advice based on weather
+    if (weather.rainfall > 20) {
+        recommendations.push('💧 High rainfall - check drainage on pastures');
+    }
+    
+    if (weather.humidity > 80) {
+        recommendations.push('💨 High humidity - parasite larvae survive longer');
+    }
+    
+    // If all low risk
+    if (recommendations.length === 0) {
+        recommendations.push('✅ All parasite risks are low');
+        recommendations.push('✅ Continue routine monitoring');
+    }
+    
+    return recommendations;
+}
