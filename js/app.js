@@ -196,11 +196,10 @@ const farmNameEl = document.getElementById('farm-name');
 const farmLocationEl = document.getElementById('farm-location');
 
 // ========================================
-// SHOW FARM DETAILS - Updated with weather
+// SHOW FARM DETAILS - Updated weather data fetching
 // ========================================
 
 async function showFarmDetails(farmId) {
-    // Find the farm in our data array
     const farm = farms.find(f => f.id === farmId);
     
     if (!farm) return;
@@ -221,9 +220,12 @@ async function showFarmDetails(farmId) {
     
     // Center map on selected farm
     map.setView([farm.lat, farm.lng], 10);
-    
-    // Open the marker popup
     markers[farmId].openPopup();
+    
+    // Show loading state
+    document.getElementById('temperature').textContent = 'Temperature: Loading...';
+    document.getElementById('humidity').textContent = 'Humidity: Loading...';
+    document.getElementById('rainfall').textContent = 'Rainfall: Loading...';
     
     // Fetch and display weather data
     const weather = await fetchWeather(farm.lat, farm.lng);
@@ -232,14 +234,30 @@ async function showFarmDetails(farmId) {
         document.getElementById('temperature').textContent = `Temperature: ${weather.temperature}°C`;
         document.getElementById('humidity').textContent = `Humidity: ${weather.humidity}%`;
         document.getElementById('rainfall').textContent = `Rainfall (7 days): ${weather.rainfall}mm`;
-        
-        // Get current season
-        const season = getCurrentSeason();
-        document.getElementById('season').textContent = `Season: ${season}`;
+        document.getElementById('season').textContent = `Season: ${getCurrentSeason()}`;
+    } else {
+        document.getElementById('temperature').textContent = 'Temperature: Error';
+        document.getElementById('humidity').textContent = 'Humidity: Error';
+        document.getElementById('rainfall').textContent = 'Rainfall: Error';
     }
-    
-    console.log('Selected farm:', farm);
-    console.log('Weather data:', weather);
+
+   // Calculate parasite-specific risks with colors
+const parasiteRisks = calculateParasiteRisks(weather, getCurrentSeason());
+
+// Helper to set risk with color
+function setRiskWithColor(elementId, riskLevel) {
+    const el = document.getElementById(elementId);
+    el.textContent = riskLevel;
+    el.className = 'parasite-risk'; // Reset classes
+    if (riskLevel === 'LOW') el.classList.add('risk-low');
+    if (riskLevel === 'MEDIUM') el.classList.add('risk-medium');
+    if (riskLevel === 'HIGH') el.classList.add('risk-high');
+}
+
+setRiskWithColor('liver-fluke-risk', parasiteRisks.liverFluke);
+setRiskWithColor('lungworm-risk', parasiteRisks.lungworm);
+setRiskWithColor('gut-worm-risk', parasiteRisks.gutWorm);
+setRiskWithColor('coccidia-risk', parasiteRisks.coccidia);
 }
 
 // ========================================
@@ -321,4 +339,118 @@ function getCurrentSeason() {
     if (month >= 5 && month <= 7) return 'Summer';
     if (month >= 8 && month <= 10) return 'Autumn';
     return 'Winter';
+}
+
+// ========================================
+// WEATHER API - Fetch real weather data
+// ========================================
+
+async function fetchWeather(lat, lng) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m&daily=precipitation_sum&timezone=Europe/London`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const weather = {
+            temperature: data.current.temperature_2m,
+            humidity: data.current.relative_humidity_2m,
+            rainfall: data.daily.precipitation_sum.slice(0, 7).reduce((a, b) => a + b, 0).toFixed(1)
+        };
+        
+        return weather;
+        
+    } catch (error) {
+        console.error('Weather fetch error:', error);
+        return null;
+    }
+}
+
+// ========================================
+// HELPER - Get current season
+// ========================================
+
+function getCurrentSeason() {
+    const month = new Date().getMonth();
+    
+    if (month >= 2 && month <= 4) return 'Spring';
+    if (month >= 5 && month <= 7) return 'Summer';
+    if (month >= 8 && month <= 10) return 'Autumn';
+    return 'Winter';
+}
+
+// ========================================
+// RISK CALCULATION - Calculate parasite risk from weather
+// ========================================
+
+function calculateRisk(weather, season) {
+    let score = 0;
+    
+    // Temperature factor (parasites thrive in warm conditions)
+    if (weather.temperature >= 10) score += 1;
+    if (weather.temperature >= 15) score += 1;
+    if (weather.temperature >= 20) score += 1;
+    
+    // Rainfall factor (wet conditions favor parasites)
+    if (weather.rainfall >= 5) score += 1;
+    if (weather.rainfall >= 15) score += 1;
+    if (weather.rainfall >= 30) score += 1;
+    
+    // Humidity factor
+    if (weather.humidity >= 60) score += 1;
+    if (weather.humidity >= 75) score += 1;
+    
+    // Season factor
+    if (season === 'Spring' || season === 'Autumn') score += 2;
+    if (season === 'Summer') score += 1;
+    // Winter adds 0
+    
+    // Determine risk level (max score = 10)
+    let level;
+    if (score <= 3) level = 'LOW';
+    else if (score <= 6) level = 'MEDIUM';
+    else level = 'HIGH';
+    
+    return { score, level };
+}
+
+// ========================================
+// PARASITE-SPECIFIC RISK CALCULATION
+// ========================================
+
+function calculateParasiteRisks(weather, season) {
+    const risks = {};
+    
+    // Liver Fluke - loves wet conditions
+    let flukeScore = 0;
+    if (weather.rainfall >= 10) flukeScore += 2;
+    if (weather.rainfall >= 25) flukeScore += 2;
+    if (weather.humidity >= 70) flukeScore += 1;
+    if (season === 'Autumn') flukeScore += 2;
+    risks.liverFluke = flukeScore >= 4 ? 'HIGH' : flukeScore >= 2 ? 'MEDIUM' : 'LOW';
+    
+    // Lungworm - warm and humid
+    let lungScore = 0;
+    if (weather.temperature >= 15) lungScore += 2;
+    if (weather.humidity >= 65) lungScore += 2;
+    if (season === 'Summer' || season === 'Autumn') lungScore += 1;
+    risks.lungworm = lungScore >= 4 ? 'HIGH' : lungScore >= 2 ? 'MEDIUM' : 'LOW';
+    
+    // Gut Worms - warm and wet
+    let gutScore = 0;
+    if (weather.temperature >= 12) gutScore += 1;
+    if (weather.temperature >= 18) gutScore += 1;
+    if (weather.rainfall >= 10) gutScore += 1;
+    if (season === 'Spring' || season === 'Summer') gutScore += 1;
+    risks.gutWorm = gutScore >= 3 ? 'HIGH' : gutScore >= 2 ? 'MEDIUM' : 'LOW';
+    
+    // Coccidia - warm, wet, stress conditions
+    let coccidiaScore = 0;
+    if (weather.temperature >= 15) coccidiaScore += 1;
+    if (weather.rainfall >= 15) coccidiaScore += 1;
+    if (weather.humidity >= 70) coccidiaScore += 1;
+    if (season === 'Spring') coccidiaScore += 2;
+    risks.coccidia = coccidiaScore >= 3 ? 'HIGH' : coccidiaScore >= 2 ? 'MEDIUM' : 'LOW';
+    
+    return risks;
 }
