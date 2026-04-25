@@ -454,3 +454,56 @@ function calculateParasiteRisks(weather, season) {
     
     return risks;
 }
+
+// ========================================
+// CUSTOM MARKERS - Colored by risk level, keep old pin style
+// ========================================
+
+function createColoredIcon(color) {
+    return L.icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+}
+
+const riskIcons = {
+    LOW: createColoredIcon('green'),
+    MEDIUM: createColoredIcon('orange'),
+    HIGH: createColoredIcon('red')
+};
+
+// ========================================
+// INITIALIZE ALL FARM MARKERS WITH RISK COLORS
+// ========================================
+
+async function initializeFarmMarkers() {
+    for (const farm of farms) {
+        // Fetch weather for this farm
+        const weather = await fetchWeather(farm.lat, farm.lng);
+        
+        if (weather) {
+            // Calculate risk
+            const risk = calculateRisk(weather, getCurrentSeason());
+            
+            // Update marker icon based on risk
+            markers[farm.id].setIcon(riskIcons[risk.level]);
+            
+            // Store risk data on farm object for later use
+            farm.weather = weather;
+            farm.risk = risk;
+        }
+    }
+    
+    console.log('All farm markers initialized with risk colors');
+}
+
+// ========================================
+// INITIALIZE APP
+// ========================================
+
+// Load risk data for all farms when page loads
+initializeFarmMarkers();
