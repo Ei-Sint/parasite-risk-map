@@ -19,6 +19,13 @@ themeToggle.addEventListener('click', function() {
 });
 
 // ========================================
+// SET DARK MODE AS DEFAULT
+// ========================================
+
+document.body.classList.add('dark-mode');
+themeToggle.textContent = '☀️ Light Mode';
+
+// ========================================
 // FARM DATA - All farm information
 // ========================================
 
