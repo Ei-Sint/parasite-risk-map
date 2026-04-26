@@ -62,10 +62,6 @@ header {
     align-items: center;
 }
 
-header {
-    background-color: #c15c1d;  /* Light mode - blue */
-}
-
 body.dark-mode header {
     background-color: #082b5d;  /* Dark mode - darker blue */
 }
@@ -754,150 +750,6 @@ html, body {
 }
 
 /* ========================================
-   COMPARE MODE STYLES
-   ======================================== */
-
-.compare-view {
-    padding: 10px 0;
-}
-
-.compare-title {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-    color: var(--text-primary);
-}
-
-.compare-hint {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 15px;
-    font-style: italic;
-}
-
-.compare-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.compare-farm {
-    background-color: var(--bg-primary);
-    border-radius: 8px;
-    padding: 15px;
-    border-left: 4px solid var(--border-color);
-}
-
-.compare-farm h4 {
-    font-size: 1rem;
-    margin-bottom: 5px;
-    color: var(--text-primary);
-}
-
-.compare-vs {
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--text-secondary);
-    padding: 5px 0;
-}
-
-.compare-risk-card {
-    background: linear-gradient(135deg, var(--border-color) 0%, var(--bg-secondary) 100%);
-    border-radius: 6px;
-    padding: 10px;
-    margin: 10px 0;
-    text-align: center;
-}
-
-.compare-risk-card.risk-low {
-    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-    color: white;
-}
-
-.compare-risk-card.risk-medium {
-    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-    color: white;
-}
-
-.compare-risk-card.risk-high {
-    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-    color: white;
-}
-
-.compare-risk-card .risk-label {
-    font-size: 0.65rem;
-    opacity: 0.9;
-}
-
-.compare-risk-card h2 {
-    font-size: 1.5rem;
-    margin: 5px 0;
-}
-
-.compare-risk-card p {
-    font-size: 0.8rem;
-    opacity: 0.9;
-}
-
-.compare-weather {
-    display: flex;
-    justify-content: space-around;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin: 10px 0;
-}
-
-.compare-parasites {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.compare-parasite-badge {
-    font-size: 0.7rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    color: white;
-}
-
-.compare-parasite-badge.risk-low {
-    background-color: #4caf50;
-}
-
-.compare-parasite-badge.risk-medium {
-    background-color: #ff9800;
-}
-
-.compare-parasite-badge.risk-high {
-    background-color: #f44336;
-}
-
-.clear-compare-btn {
-    width: 100%;
-    padding: 10px;
-    margin-top: 15px;
-    background-color: var(--border-color);
-    color: var(--text-primary);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.clear-compare-btn:hover {
-    background-color: var(--text-secondary);
-    color: white;
-}
-
-/* Highlight selected farms in compare mode */
-#farm-list li.compare-selected {
-    background-color: var(--accent-color);
-    color: white;
-    border-left-color: var(--text-primary);
-}
-
-/* ========================================
    HEADER BUTTONS
    ======================================== */
 
@@ -1024,4 +876,219 @@ html, body {
 .modal-content::-webkit-scrollbar-thumb {
     background-color: var(--border-color);
     border-radius: 3px;
+}
+
+/* ========================================
+   MOBILE RESPONSIVENESS
+   ======================================== */
+
+/* Tablet (768px and below) */
+@media screen and (max-width: 768px) {
+    header {
+        padding: 10px 15px;
+    }
+    
+    header h1 {
+        font-size: 1.1rem;
+    }
+    
+    .header-buttons {
+        gap: 8px;
+    }
+    
+    #assumptions-btn {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+    }
+    
+    #theme-toggle {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+    
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .app-container.detail-open {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 150px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        overflow-y: auto;
+    }
+    
+    .map-section {
+        width: 100%;
+        height: 400px;
+        min-height: 400px;
+        padding: 10px;
+    }
+    
+    #map {
+        height: 100%;
+        min-height: 350px;
+    }
+    
+    .detail-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        width: 100%;
+        height: 60vh;
+        max-height: 60vh;
+        border-left: none;
+        border-top: 3px solid var(--accent-color);
+        border-radius: 20px 20px 0 0;
+        z-index: 500;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+    }
+    
+    .app-container.detail-open .detail-panel {
+        display: block;
+    }
+}
+
+/* Mobile (480px and below) */
+@media screen and (max-width: 480px) {
+    header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    header h1 {
+        font-size: 1rem;
+    }
+    
+    .header-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    #assumptions-btn,
+    #theme-toggle {
+        font-size: 0.7rem;
+        padding: 5px 8px;
+    }
+    
+    .sidebar {
+        padding: 10px;
+        max-height: 120px;
+    }
+    
+    .sidebar h2 {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    #farm-list {
+        gap: 5px;
+    }
+    
+    #farm-list li {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+    
+    .risk-badge {
+        font-size: 0.55rem;
+        padding: 2px 5px;
+    }
+    
+    .map-section {
+        height: 350px;
+        min-height: 350px;
+        padding: 8px;
+    }
+    
+    .detail-panel {
+        height: 65vh;
+        max-height: 65vh;
+        padding: 15px;
+    }
+    
+    .detail-panel h3 {
+        font-size: 1.1rem;
+    }
+    
+    .overall-risk-card {
+        padding: 12px;
+    }
+    
+    .risk-level-large {
+        font-size: 1.4rem;
+    }
+    
+    .risk-description {
+        font-size: 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 0.7rem;
+    }
+    
+    .parasite-card {
+        padding: 10px;
+    }
+    
+    .parasite-card .parasite-name {
+        font-size: 0.85rem;
+    }
+    
+    .weather-grid {
+        gap: 6px;
+    }
+    
+    .weather-item {
+        padding: 10px;
+    }
+    
+    .weather-label {
+        font-size: 0.6rem;
+    }
+    
+    .weather-value {
+        font-size: 1rem;
+    }
+    
+    .timeline-container {
+        min-height: 150px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+        max-height: 85vh;
+        margin: 10px;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.1rem;
+    }
+    
+    .modal-section h3 {
+        font-size: 0.85rem;
+    }
+    
+    .modal-section li {
+        font-size: 0.75rem;
+        padding: 6px 0 6px 12px;
+    }
+}
+
+/* Hide sidebar when detail panel is open (mobile) */
+@media screen and (max-width: 768px) {
+    .app-container.detail-open .sidebar {
+        display: none;
+    }
 }

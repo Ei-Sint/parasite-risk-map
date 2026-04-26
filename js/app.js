@@ -216,12 +216,12 @@ farms.forEach(farm => {
     const marker = L.marker([farm.lat, farm.lng]).addTo(map);
     
     // Add popup with farm name
-    marker.bindPopup(`<strong>${farm.name}</strong><br>${farm.location}`);
-    
-    // Store marker reference
+    marker.bindTooltip(farm.name, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -35]
+    });
     markers[farm.id] = marker;
-    
-    // When marker is clicked, show farm details
     marker.on('click', function() {
         showFarmDetails(farm.id);
     });
@@ -865,6 +865,7 @@ async function updateTimelineChart(farm) {
         console.error('Timeline fetch error:', error);
     }
 }
+
 
 // ========================================
 // INITIALIZE APP - Recalling it, MUST BE AT THE END
