@@ -17,10 +17,13 @@
 </head>
     <body>
       <header>
-        <h1>Parasite Risk Map </h1>
-        <button id="theme-toggle">🌙 Dark Mode</button>
-        
-      </header>
+    <h1>Parasite Risk Map</h1>
+    <div class="header-buttons">
+        <button id="assumptions-btn">Assumptions & Limitations</button>
+        <button id="theme-toggle">☀️ Light Mode</button>
+    </div>
+</header>
+
       <main class = "app-container">
         <aside class = "sidebar">
             
@@ -34,11 +37,6 @@
                 <option value="wales"> Wales </option>
                 <option value="ireland"> Northern Ireland </option>
             </select>
-
-            <div class="compare-toggle">
-                <input type = "checkbox" id="compare-toggle-checkbox">
-                <label for="compare-toggle-checkbox">Compare Regions</label>
-            </div>
 
             <h2>Farms Locations </h2>
             <ul id="farm-list">
@@ -89,9 +87,6 @@
         <h4 class="section-title">PARASITE RISKS AT THIS LOCATION</h4>
         <div id="parasite-cards-container"></div>
         
-        
-        <!-- Score Breakdown -->
-        </div>
         
         <!-- Score Breakdown -->
         <h4 class="section-title">SCORE BREAKDOWN (<span id="risk-score">0</span> / 10)</h4>
@@ -153,11 +148,77 @@
             <p>This is a risk assessment tool based on environmental conditions. Always consult a veterinarian before making treatment decisions.</p>
         </div>
     </div>
+    
 </aside>
 
     </main>
     
-    <script src="js/app.js"></script>
+    
+
+    <!-- Assumptions & Limitations Modal -->
+<div id="assumptions-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button id="close-modal" class="close-btn">✕</button>
+        
+        <h2>Assumptions & Limitations</h2>
+        
+        <div class="modal-section">
+            <h3>📊 Data Sources</h3>
+            <ul>
+                <li>Weather data is sourced from <strong>Open-Meteo API</strong> and updates in real-time</li>
+                <li>Risk calculations are based on established veterinary research on parasite lifecycles</li>
+                <li>Farm locations are approximate coordinates for demonstration purposes</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>🔬 Risk Calculation Assumptions</h3>
+            <ul>
+                <li>Temperature above 10°C increases parasite activity</li>
+                <li>Higher rainfall (>5mm/week) creates favorable conditions for larvae survival</li>
+                <li>Humidity above 60% extends parasite lifespan on pasture</li>
+                <li>Spring and Autumn are peak risk seasons for most parasites</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>🐛 Parasite-Specific Factors</h3>
+            <ul>
+                <li><strong>Liver Fluke:</strong> Requires wet conditions and mud snail intermediate hosts</li>
+                <li><strong>Lungworm:</strong> Thrives in warm, humid conditions; spread via slugs and snails</li>
+                <li><strong>Gut Worms:</strong> Peak during grazing season with warm, moist pastures</li>
+                <li><strong>Coccidia:</strong> Highest risk in young animals during spring turnout</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>⚠️ Limitations</h3>
+            <ul>
+                <li>This tool provides <strong>estimates only</strong> and should not replace professional veterinary advice</li>
+                <li>Local microclimate variations may affect actual risk levels</li>
+                <li>Stocking density, grazing history, and previous treatments are not factored in</li>
+                <li>The model does not account for anthelmintic resistance patterns</li>
+                <li>7-day rainfall data may not capture longer-term moisture trends</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>✅ Recommendations</h3>
+            <ul>
+                <li>Always conduct faecal egg counts (FEC) before treatment decisions</li>
+                <li>Consult with your veterinarian for farm-specific parasite management plans</li>
+                <li>Use this tool as one part of an integrated parasite control strategy</li>
+                <li>Monitor livestock regularly for clinical signs regardless of risk level</li>
+            </ul>
+        </div>
+        
+        <div class="modal-footer">
+            <p>Data fetched from Open-Meteo API • Risk scoring v2.0</p>
+        </div>
+    </div>
+</div>
       
+
+<script src="js/app.js"></script>
     </body>
 </html>

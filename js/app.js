@@ -857,8 +857,7 @@ async function updateTimelineChart(farm) {
                         display: false
                             }
                         }
-}        
-});
+}        });
         
         console.log('Chart created successfully!');
         
@@ -867,10 +866,48 @@ async function updateTimelineChart(farm) {
     }
 }
 
-
-
 // ========================================
 // INITIALIZE APP - Recalling it, MUST BE AT THE END
 // ========================================
  
 initializeFarmMarkers();
+
+// ========================================
+// ASSUMPTIONS & LIMITATIONS MODAL
+// ========================================
+
+const assumptionsBtn = document.getElementById('assumptions-btn');
+const assumptionsModal = document.getElementById('assumptions-modal');
+const closeModal = document.getElementById('close-modal');
+
+if (assumptionsBtn && assumptionsModal && closeModal) {
+    // Open modal
+    assumptionsBtn.addEventListener('click', function() {
+        assumptionsModal.classList.add('active');
+    });
+
+    // Close modal with X button
+    closeModal.addEventListener('click', function() {
+        assumptionsModal.classList.remove('active');
+    });
+
+    // Close modal by clicking outside
+    assumptionsModal.addEventListener('click', function(e) {
+        if (e.target === assumptionsModal) {
+            assumptionsModal.classList.remove('active');
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && assumptionsModal.classList.contains('active')) {
+            assumptionsModal.classList.remove('active');
+        }
+    });
+} else {
+    console.error('Modal elements not found!');
+}
+
+
+
+
