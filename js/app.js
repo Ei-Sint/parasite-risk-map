@@ -241,13 +241,53 @@ const farmNameEl = document.getElementById('farm-name');
 const farmLocationEl = document.getElementById('farm-location');
 
 // ========================================
-// SHOW FARM DETAILS - Updated weather data fetching
+// HELPER - Build Parasite Cards (Sorted by Risk)
+// ========================================
+
+function buildParasiteCards(parasiteRisks) {
+    const container = document.getElementById('parasite-cards-container');
+    container.innerHTML = '';
+    
+    const parasiteData = [
+        { name: 'Liver Fluke', key: 'liverFluke', risk: parasiteRisks.liverFluke, affects: 'Sheep & Cattle' },
+        { name: 'Lungworm', key: 'lungworm', risk: parasiteRisks.lungworm, affects: 'Cattle (Dictyocaulus viviparus)' },
+        { name: 'Gut Worms', key: 'gutWorm', risk: parasiteRisks.gutWorm, affects: 'Sheep & Cattle' },
+        { name: 'Coccidia', key: 'coccidia', risk: parasiteRisks.coccidia, affects: 'Young livestock' }
+    ];
+    
+    const riskOrder = { 'HIGH': 0, 'MEDIUM': 1, 'LOW': 2 };
+    parasiteData.sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
+    
+    parasiteData.forEach(parasite => {
+        const action = getParasiteAction(parasite.key, parasite.risk);
+        
+        const card = document.createElement('div');
+        card.className = `parasite-card risk-${parasite.risk.toLowerCase()}`;
+        card.innerHTML = `
+            <div class="parasite-header">
+                <span class="parasite-name">${parasite.name}</span>
+                <span class="parasite-risk risk-${parasite.risk.toLowerCase()}">${parasite.risk}</span>
+            </div>
+            <p class="parasite-affects">Affects: ${parasite.affects}</p>
+            <div class="parasite-action">
+                <span class="action-label">✓ RECOMMENDED ACTION:</span>
+                <p>${action}</p>
+            </div>
+        `;
+        
+        container.appendChild(card);
+    });
+}
+
+// ========================================
+// SHOW FARM DETAILS - Professional Panel Styling (hopefully this one is final)
 // ========================================
 
 async function showFarmDetails(farmId) {
     const farm = farms.find(f => f.id === farmId);
     
     if (!farm) return;
+    
     // Show the detail panel
     appContainer.classList.add('detail-open');
     
@@ -258,7 +298,7 @@ async function showFarmDetails(farmId) {
     const selectedLi = farmList.querySelector(`li[data-id="${farmId}"]`);
     if (selectedLi) selectedLi.classList.add('selected');
     
-    // Fill in the farm details
+    // Fill in farm header
     farmNameEl.textContent = farm.name;
     farmLocationEl.textContent = farm.location;
     
@@ -267,60 +307,167 @@ async function showFarmDetails(farmId) {
     markers[farmId].openPopup();
     
     // Show loading state
-    document.getElementById('temperature').textContent = 'Temperature: Loading...';
-    document.getElementById('humidity').textContent = 'Humidity: Loading...';
-    document.getElementById('rainfall').textContent = 'Rainfall: Loading...';
-    document.getElementById('risk-level').textContent = 'Risk Level: Loading...';
-    document.getElementById('risk-score').textContent = 'Risk Score: Loading...';
+    document.getElementById('risk-level-display').textContent = 'Loading...';
+    document.getElementById('temperature').textContent = '--°C';
+    document.getElementById('humidity').textContent = '--%';
+    document.getElementById('rainfall').textContent = '--mm';
     
     // Fetch weather data
     const weather = await fetchWeather(farm.lat, farm.lng);
+    
     if (weather) {
-        // Display weather
-        document.getElementById('temperature').textContent = `Temperature: ${weather.temperature}°C`;
-        document.getElementById('humidity').textContent = `Humidity: ${weather.humidity}%`;
-        document.getElementById('rainfall').textContent = `Rainfall (7 days): ${weather.rainfall}mm`;
-        document.getElementById('season').textContent = `Season: ${getCurrentSeason()}`;
+        const season = getCurrentSeason();
         
-        // Calculate and display overall risk
-        const risk = calculateRisk(weather, getCurrentSeason());
-        document.getElementById('risk-level').textContent = `Risk Level: ${risk.level}`;
-        document.getElementById('risk-score').textContent = `Risk Score: ${risk.score}/10`;
+        // Calculate risks
+        const risk = calculateRisk(weather, season);
+        const parasiteRisks = calculateParasiteRisks(weather, season);
         
-        // Calculate parasite-specific risks
-        const parasiteRisks = calculateParasiteRisks(weather, getCurrentSeason());
+        // Update Overall Risk Card
+        const riskCard = document.getElementById('overall-risk-card');
+        riskCard.className = 'overall-risk-card risk-' + risk.level.toLowerCase();
+        document.getElementById('risk-level-display').textContent = risk.level;
+        document.getElementById('risk-score').textContent = risk.score;
         
-        // Helper to set risk with color
-        function setRiskWithColor(elementId, riskLevel) {
-            const el = document.getElementById(elementId);
-            el.textContent = riskLevel;
-            el.className = 'parasite-risk';
-            if (riskLevel === 'LOW') el.classList.add('risk-low');
-            if (riskLevel === 'MEDIUM') el.classList.add('risk-medium');
-            if (riskLevel === 'HIGH') el.classList.add('risk-high');
-        }
+        // Generate risk description
+        const riskDesc = generateRiskDescription(weather, season, risk.level);
+        document.getElementById('risk-description').textContent = riskDesc;
         
-        setRiskWithColor('liver-fluke-risk', parasiteRisks.liverFluke);
-        setRiskWithColor('lungworm-risk', parasiteRisks.lungworm);
-        setRiskWithColor('gut-worm-risk', parasiteRisks.gutWorm);
-        setRiskWithColor('coccidia-risk', parasiteRisks.coccidia);
+        // Build parasite cards (sorted by risk)
+        buildParasiteCards(parasiteRisks);
+
+        // Update Score Breakdown
+        updateScoreBreakdown(weather, season);
         
-        // Generate and display recommendations
-        const recommendations = generateRecommendations(parasiteRisks, weather);
-        const recommendationList = document.getElementById('recommendation-list');
-        recommendationList.innerHTML = '';
+        // Update Weather Display
+        document.getElementById('temperature').textContent = weather.temperature + '°C';
+        document.getElementById('humidity').textContent = weather.humidity + '%';
+        document.getElementById('rainfall').textContent = weather.rainfall + 'mm';
+        document.getElementById('season').textContent = season;
         
-        recommendations.forEach(rec => {
-            const li = document.createElement('li');
-            li.textContent = rec;
-            recommendationList.appendChild(li);
-        });
+        // Update Timeline Chart
+        // Small delay to let the panel render
+        setTimeout(() => {
+            updateTimelineChart(farm);
+        }, 100);
         
     } else {
-        document.getElementById('temperature').textContent = 'Temperature: Error';
-        document.getElementById('humidity').textContent = 'Humidity: Error';
-        document.getElementById('rainfall').textContent = 'Rainfall: Error';
+        document.getElementById('risk-level-display').textContent = 'ERROR';
+        document.getElementById('risk-description').textContent = 'Could not fetch weather data.';
     }
+}
+
+// ========================================
+// HELPER - Generate Risk Description
+// ========================================
+
+function generateRiskDescription(weather, season, riskLevel) {
+    let desc = `Risk is ${riskLevel} due to `;
+    let factors = [];
+    
+    if (weather.humidity >= 70) factors.push(`elevated humidity (${weather.humidity}%)`);
+    if (weather.temperature >= 15) factors.push(`warm temperatures (${weather.temperature}°C)`);
+    if (weather.rainfall >= 10) factors.push(`recent rainfall (${weather.rainfall}mm)`);
+    if (season === 'Spring') factors.push('spring season (peak larval activity)');
+    if (season === 'Autumn') factors.push('autumn season (fluke risk elevated)');
+    
+    if (factors.length === 0) {
+        return `Current conditions show ${riskLevel.toLowerCase()} parasite risk. Continue routine monitoring.`;
+    }
+    
+    desc += factors.join(' and ') + '. These conditions favour parasite survival on pasture.';
+    return desc;
+}
+
+// ========================================
+// HELPER - Update Parasite Card
+// ========================================
+
+function updateParasiteCard(parasiteId, riskLevel, affects, action) {
+    const card = document.getElementById(parasiteId + '-risk').closest('.parasite-card');
+    const riskBadge = document.getElementById(parasiteId + '-risk');
+    const actionDiv = document.getElementById(parasiteId + '-action');
+    
+    // Update card border color
+    card.className = 'parasite-card risk-' + riskLevel.toLowerCase();
+    
+    // Update risk badge
+    riskBadge.textContent = riskLevel;
+    riskBadge.className = 'parasite-risk risk-' + riskLevel.toLowerCase();
+    
+    // Update action text
+    actionDiv.querySelector('p').textContent = action;
+}
+
+// ========================================
+// HELPER - Get Parasite Action Text
+// ========================================
+
+function getParasiteAction(parasite, riskLevel) {
+    const actions = {
+        liverFluke: {
+            HIGH: 'Treat livestock for liver fluke immediately. Avoid grazing on wet pastures.',
+            MEDIUM: 'Monitor for liver fluke. Consider faecal testing.',
+            LOW: 'Continue routine monitoring.'
+        },
+        lungworm: {
+            HIGH: 'Vaccinate cattle for lungworm. Monitor for coughing or labored breathing.',
+            MEDIUM: 'Monitor for coughing or labored breathing. Rotate pastures.',
+            LOW: 'Continue routine monitoring.'
+        },
+        gutWorm: {
+            HIGH: 'Implement rotational grazing. Conduct faecal egg counts.',
+            MEDIUM: 'Monitor for weight loss, diarrhea, or poor coat condition. Consider faecal testing.',
+            LOW: 'Continue routine monitoring.'
+        },
+        coccidia: {
+            HIGH: 'Treat young animals for coccidiosis. Improve housing hygiene.',
+            MEDIUM: 'Monitor young stock for signs of coccidiosis.',
+            LOW: 'Continue routine monitoring.'
+        }
+    };
+    
+    return actions[parasite][riskLevel];
+}
+
+// ========================================
+// HELPER - Update Score Breakdown
+// ========================================
+
+function updateScoreBreakdown(weather, season) {
+    // Temperature score (0-3)
+    let tempScore = 0;
+    if (weather.temperature >= 10) tempScore++;
+    if (weather.temperature >= 15) tempScore++;
+    if (weather.temperature >= 20) tempScore++;
+    
+    // Rainfall score (0-3)
+    let rainScore = 0;
+    if (weather.rainfall >= 5) rainScore++;
+    if (weather.rainfall >= 15) rainScore++;
+    if (weather.rainfall >= 30) rainScore++;
+    
+    // Humidity score (0-2)
+    let humidityScore = 0;
+    if (weather.humidity >= 60) humidityScore++;
+    if (weather.humidity >= 75) humidityScore++;
+    
+    // Season score (0-2)
+    let seasonScore = 0;
+    if (season === 'Spring' || season === 'Autumn') seasonScore = 2;
+    else if (season === 'Summer') seasonScore = 1;
+    
+    // Update bars
+    document.getElementById('temp-score').style.width = (tempScore / 3 * 100) + '%';
+    document.getElementById('temp-score-text').textContent = tempScore + '/3';
+    
+    document.getElementById('rain-score').style.width = (rainScore / 3 * 100) + '%';
+    document.getElementById('rain-score-text').textContent = rainScore + '/3';
+    
+    document.getElementById('humidity-score').style.width = (humidityScore / 2 * 100) + '%';
+    document.getElementById('humidity-score-text').textContent = humidityScore + '/2';
+    
+    document.getElementById('season-score').style.width = (seasonScore / 2 * 100) + '%';
+    document.getElementById('season-score-text').textContent = seasonScore + '/2';
 }
 
 // ========================================
@@ -627,6 +774,100 @@ regionFilter.addEventListener('change', function() {
         }
     });
 });
+
+
+// ========================================
+// TIMELINE CHART - 7 Day Risk History
+// ========================================
+
+let riskChart = null;
+
+async function updateTimelineChart(farm) {
+    const canvas = document.getElementById('risk-chart');
+    
+    if (!canvas) {
+        console.error('Canvas not found!');
+        return;
+    }
+    
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${farm.lat}&longitude=${farm.lng}&daily=temperature_2m_max,precipitation_sum,relative_humidity_2m_max&timezone=Europe/London&past_days=7`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        const dates = data.daily.time.slice(0, 7);
+        const riskScores = [];
+        
+        for (let i = 0; i < 7; i++) {
+            const dayWeather = {
+                temperature: data.daily.temperature_2m_max[i],
+                humidity: data.daily.relative_humidity_2m_max[i],
+                rainfall: data.daily.precipitation_sum[i]
+            };
+            
+            const risk = calculateRisk(dayWeather, getCurrentSeason());
+            riskScores.push(risk.score);
+        }
+        
+        const labels = dates.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' });
+        });
+        
+        if (riskChart) {
+            riskChart.destroy();
+        }
+        
+        const ctx = canvas.getContext('2d');
+        riskChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Risk Score',
+                    data: riskScores,
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: riskScores.map(score => {
+                        if (score <= 3) return '#4caf50';
+                        if (score <= 6) return '#ff9800';
+                        return '#f44336';
+                    }),
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: {
+                                stepSize: 2
+                                    }
+                                }
+                         },
+                plugins: {
+                    legend: {
+                        display: false
+                            }
+                        }
+}        
+});
+        
+        console.log('Chart created successfully!');
+        
+    } catch (error) {
+        console.error('Timeline fetch error:', error);
+    }
+}
+
+
 
 // ========================================
 // INITIALIZE APP - Recalling it, MUST BE AT THE END

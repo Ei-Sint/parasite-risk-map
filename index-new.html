@@ -11,6 +11,8 @@
     
     <!-- Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
     <body>
@@ -64,71 +66,95 @@
                 <!-- Map will be inserted here -->
             </div>
             
-            <div id ="timeline-chart">
-                <!-- 7days risk timeline chart will be here -->
-                <h3>Risk Over the Past 7 Days Chart</h3>
-                <p> Select a farm to view its risk timeline</p>
-            </div>
         </section>
 
-        <aside class = "detail-panel">
-            <button id="close-panel" class="close-btn">✕</button>
+        <aside class="detail-panel">
+    <button id="close-panel" class="close-btn">✕</button>
+    
+    <div class="farm-details" id="farm-details">
+        <!-- Farm Header -->
+        <h3 id="farm-name">Farm Name</h3>
+        <p id="farm-location" class="farm-meta">Location</p>
+        
+        <!-- Overall Risk Card -->
+        <div class="overall-risk-card" id="overall-risk-card">
+            <span class="risk-label">OVERALL PARASITE RISK</span>
+            <h2 id="risk-level-display" class="risk-level-large">MEDIUM</h2>
+            <p id="risk-description" class="risk-description">
+                Risk is calculated based on current weather conditions and seasonal factors.
+            </p>
+        </div>
 
-        <div class ="farm-details" id ="farm-details">
-            <!-- Farm details will be shown here when a farm is selected -->
-             <h3 id="farm-name">Farm Name</h3>
-             <p id="farm-location">Location </p> 
-            
-
-            <div class ="risk-display">
-                <h4>Current Risk Level</h4>
-                <p id="risk-level">Risk Level: - </p>
-                <p id="risk-score">Risk Score: -/10 </p>
-            </div>
-            
-            <div class="parasite-risks">
-                <h4>Parasite Risk Breakdown</h4>
-                <ul id="parasite-list">
-                    <!-- Parasite risk breakdown with types of species will be listed here -->
-                     <li>
-                        <span class="parasite-name">Liver Fluke</span>
-                        <span class="parasite-risk" id="liver-fluke-risk">- </span>
-                     </li>
-                     <li>
-                        <span class="parasite-name">Lungworm</span>
-                        <span class="parasite-risk" id="lungworm-risk">- </span>
-                     </li>
-                     <li>
-                        <span class="parasite-name">Gut-worm</span>
-                        <span class="parasite-risk" id="gut-worm-risk">- </span>
-                     </li>
-                     <li>
-                        <span class="parasite-name">Coccidia</span>
-                        <span class="parasite-risk" id="coccidia-risk">- </span>
-                     </li>
-                </ul>
-            </div>
-
-            <div class="recommendations">
-                <h4>Recommendations</h4>
-                <ul id="recommendation-list">
-                    <li> Select a farm to view recommendations</li> <!-- Recommendations will be listed here based on the risk levels when a farm is selected -->
-                </ul>
-            </div>
-
-            <div class="weather-data">
-                <h4>Current Weather Conditions</h4>
-                <p id="temperature">Temperature: - °C </p>
-                <p id="humidity">Humidity: - % </p>
-                <p id="rainfall">Rainfall(7 days): - mm </p>
-                <p id="season">Season: - </p>
-            </div>
-
-            
-           
+        <!-- Parasite Risks -->
+        <h4 class="section-title">PARASITE RISKS AT THIS LOCATION</h4>
+        <div id="parasite-cards-container"></div>
+        
+        
+        <!-- Score Breakdown -->
         </div>
         
-        </aside> 
+        <!-- Score Breakdown -->
+        <h4 class="section-title">SCORE BREAKDOWN (<span id="risk-score">0</span> / 10)</h4>
+        
+        <div class="score-breakdown">
+            <div class="score-row">
+                <span>Temperature</span>
+                <div class="score-bar"><div class="score-fill" id="temp-score"></div></div>
+                <span id="temp-score-text">0/3</span>
+            </div>
+            <div class="score-row">
+                <span>Rainfall (7d)</span>
+                <div class="score-bar"><div class="score-fill" id="rain-score"></div></div>
+                <span id="rain-score-text">0/3</span>
+            </div>
+            <div class="score-row">
+                <span>Humidity</span>
+                <div class="score-bar"><div class="score-fill" id="humidity-score"></div></div>
+                <span id="humidity-score-text">0/2</span>
+            </div>
+            <div class="score-row">
+                <span>Season</span>
+                <div class="score-bar"><div class="score-fill" id="season-score"></div></div>
+                <span id="season-score-text">0/2</span>
+            </div>
+        </div></div>  <!-- end of score-breakdown -->
+        
+        <!-- 7-Day Risk Timeline -->
+        <h4 class="section-title">RISK OVER THE PAST 7 DAYS</h4>
+        <div class="timeline-container">
+            <canvas id="risk-chart"></canvas>
+        </div>
+        
+        <!-- Weather Conditions -->
+        <h4 class="section-title">CURRENT WEATHER CONDITIONS</h4>
+        
+        <div class="weather-grid">
+            <div class="weather-item">
+                <span class="weather-label">TEMPERATURE</span>
+                <span class="weather-value" id="temperature">--°C</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">HUMIDITY</span>
+                <span class="weather-value" id="humidity">--%</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">7-DAY RAINFALL</span>
+                <span class="weather-value" id="rainfall">--mm</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">SEASON</span>
+                <span class="weather-value" id="season">--</span>
+            </div>
+        </div>
+        
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <span class="disclaimer-title">⚠ IMPORTANT DISCLAIMER:</span>
+            <p>This is a risk assessment tool based on environmental conditions. Always consult a veterinarian before making treatment decisions.</p>
+        </div>
+    </div>
+</aside>
+
     </main>
     
     <script src="js/app.js"></script>
