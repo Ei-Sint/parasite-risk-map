@@ -151,7 +151,20 @@ const farms = [
 // ========================================
 
 // Create map centered on UK
-const map = L.map('map').setView([54.0, -2.5], 6);
+// Updated map within UK boundaries only
+const ukBounds = L.latLngBounds(
+    [49.5, -8.5],  // Southwest corner (bottom-left)
+    [59.0, 2.0]    // Northeast corner (top-right)
+);
+
+const map = L.map('map', {
+    center: [54.0, -2.5],
+    zoom: 6,
+    minZoom: 5,
+    maxZoom: 12,
+    maxBounds: ukBounds,
+    maxBoundsViscosity: 1.0  // Prevents dragging outside bounds
+}).setView([54.0, -2.5], 6);
 
 // Add map tiles (the actual map images)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -534,4 +547,42 @@ closePanel.addEventListener('click', function() {
     
     // Reset map view to show all UK
     map.setView([54.0, -2.5], 6);
+});
+
+// ========================================
+// REGION FILTER
+// ========================================
+
+const regionFilter = document.getElementById('region-filter');
+
+regionFilter.addEventListener('change', function() {
+    const selectedRegion = this.value;
+    
+    // Get all farm list items
+    const farmItems = farmList.querySelectorAll('li');
+    
+    farmItems.forEach(item => {
+        const farmRegion = item.dataset.region;
+        
+        if (selectedRegion === 'all' || farmRegion === selectedRegion) {
+            // Show this farm
+            item.style.display = 'block';
+        } else {
+            // Hide this farm
+            item.style.display = 'none';
+        }
+    });
+    
+    // Also filter map markers
+    farms.forEach(farm => {
+        const marker = markers[farm.id];
+        
+        if (selectedRegion === 'all' || farm.region === selectedRegion) {
+            // Show marker
+            marker.addTo(map);
+        } else {
+            // Hide marker
+            map.removeLayer(marker);
+        }
+    });
 });
