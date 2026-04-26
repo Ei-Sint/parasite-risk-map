@@ -1,22 +1,46 @@
 // ========================================
-// THEME TOGGLE FUNCTIONALITY
+// THEME TOGGLE ^^ LIGHT AND DARK MODE
 // ========================================
 
-// Get the toggle button element
 const themeToggle = document.getElementById('theme-toggle');
 
-// Add click event listener
-themeToggle.addEventListener('click', function() {
-    // Toggle the dark-mode class on body
+// Map tile URLs
+const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const lightTiles = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+// This will store the current tile layer (set after map is created)
+let currentTileLayer = null;
+
+// Theme toggle click handler
+function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     
-    // Update button text based on current mode
-    if (document.body.classList.contains('dark-mode')) {
-        themeToggle.textContent = '☀️ Light Mode';
+    // Only switch tiles if map exists
+    if (typeof map !== 'undefined' && currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+        
+        if (document.body.classList.contains('dark-mode')) {
+            themeToggle.textContent = '☀️ Light Mode';
+            currentTileLayer = L.tileLayer(darkTiles, {
+                attribution: '© OpenStreetMap contributors © CARTO'
+            }).addTo(map);
+        } else {
+            themeToggle.textContent = '🌙 Dark Mode';
+            currentTileLayer = L.tileLayer(lightTiles, {
+                attribution: '© OpenStreetMap contributors © CARTO'
+            }).addTo(map);
+        }
     } else {
-        themeToggle.textContent = '🌙 Dark Mode';
+        // Map not ready yet, just toggle text
+        if (document.body.classList.contains('dark-mode')) {
+            themeToggle.textContent = '☀️ Light Mode';
+        } else {
+            themeToggle.textContent = '🌙 Dark Mode';
+        }
     }
-});
+}
+
+themeToggle.addEventListener('click', toggleTheme);
 
 // ========================================
 // SET DARK MODE AS DEFAULT
@@ -174,7 +198,8 @@ const map = L.map('map', {
 }).setView([54.0, -2.5], 6);
 
 // Add map tiles (the actual map images)
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+// Add initial tile layer and store reference
+currentTileLayer = L.tileLayer(darkTiles, {
     attribution: '© OpenStreetMap contributors © CARTO'
 }).addTo(map);
 
@@ -452,11 +477,11 @@ const riskIcons = {
 // ========================================
 
 async function initializeFarmMarkers() {
+    console.log('Starting to load farm data...');
+    
     for (const farm of farms) {
-        // Set default icon first
         markers[farm.id].setIcon(riskIcons.DEFAULT);
         
-        // Fetch weather for this farm
         const weather = await fetchWeather(farm.lat, farm.lng);
         
         if (weather) {
@@ -468,18 +493,27 @@ async function initializeFarmMarkers() {
             // Store data on farm object
             farm.weather = weather;
             farm.risk = risk;
+            
+            // ADD RISK BADGE TO FARM LIST
+            const farmItem = farmList.querySelector(`li[data-id="${farm.id}"]`);
+            if (farmItem) {
+                // Remove existing badge if any
+                const existingBadge = farmItem.querySelector('.risk-badge');
+                if (existingBadge) existingBadge.remove();
+                
+                // Create new badge
+                const badge = document.createElement('span');
+                badge.className = `risk-badge risk-${risk.level.toLowerCase()}`;
+                badge.textContent = risk.level;
+                farmItem.appendChild(badge);
+            }
+            
+            console.log(`Loaded: ${farm.name} - ${risk.level}`);
         }
     }
     
-    console.log('All farm markers initialized with risk colors');
+    console.log('All farm markers initialized with risk colors and badges!');
 }
-
-// ========================================
-// INITIALIZE APP
-// ========================================
-
-// Load risk data for all farms when page loads
-initializeFarmMarkers();
 
 // ========================================
 // RECOMMENDATIONS - Generate advice based on risks
@@ -593,3 +627,9 @@ regionFilter.addEventListener('change', function() {
         }
     });
 });
+
+// ========================================
+// INITIALIZE APP - Recalling it, MUST BE AT THE END
+// ========================================
+ 
+initializeFarmMarkers();

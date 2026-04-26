@@ -54,12 +54,20 @@ body {
    ======================================== */
 
 header {
-    background-color: var(--accent-color);
+    background-color: #2e7d32;
     color: white;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+header {
+    background-color: #c15c1d;  /* Light mode - blue */
+}
+
+body.dark-mode header {
+    background-color: #082b5d;  /* Dark mode - darker blue */
 }
 
 header h1 {
@@ -364,4 +372,39 @@ header h1 {
 
 .detail-panel {
     position: relative;  /* Add this so close button positions correctly */
+}
+
+/* ========================================
+   RISK BADGES - Farm list tags
+   ======================================== */
+
+#farm-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.risk-badge {
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.risk-badge.risk-low {
+    background-color: var(--low-risk);
+    color: white;
+}
+
+.risk-badge.risk-medium {
+    background-color: var(--medium-risk);
+    color: white;
+}
+
+.risk-badge.risk-high {
+    background-color: var(--high-risk);
+    color: white;
 }
