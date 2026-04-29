@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasture & Parasite Risk Map</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Parasite Risk Map</h1>
+        <div class="header-buttons">
+            <button id="assumptions-btn">Assumptions & Limitations</button>
+            <button id="theme-toggle">☀️ Light Mode</button>
+        </div>
+    </header>
+
+
+      <main class = "app-container">
+        <aside class = "sidebar">
+            
+            <label for="region-filter">Region:</label>
+            
+            <select id="region-filter">
+                <option value="all">All Regions </option>
+                <option value="north">North England </option>
+                <option value="south">South England </option>
+                <option value="scotland"> Scotland </option>
+                <option value="wales"> Wales </option>
+                <option value="ireland"> Northern Ireland </option>
+            </select>
+
+            <h2>Farms Locations </h2>
+            <ul id="farm-list">
+                 <li data-id="1" data-region="north">Highfield Farm - North Yorkshire</li>
+                 <li data-id="2" data-region="north">Meadowbrook Estate - Lancashire</li>
+                 <li data-id="3" data-region="north">Riverside Pastures - Cumbria</li>
+                 <li data-id="4" data-region="north">Green Acres - Cheshire</li>
+                 <li data-id="5" data-region="north">Hilltop Farm - Derbyshire</li>
+                 <li data-id="6" data-region="wales">Oakwood Farm - Shropshire</li>
+                 <li data-id="7" data-region="wales">Valley View - Herefordshire</li>
+                 <li data-id="8" data-region="south">Sunny Meadows - Gloucestershire</li>
+                 <li data-id="9" data-region="south">Willow Creek - Somerset</li>
+                 <li data-id="10" data-region="south">Stonegate Farm - Devon</li>
+                 <li data-id="11" data-region="north">Pennine View - West Yorkshire</li>
+                 <li data-id="12" data-region="north">Lakeside Farm - Lake District</li>
+                 <li data-id="13" data-region="scotland">Border Farm - Scottish Borders</li>
+                 <li data-id="14" data-region="wales">Welsh Hills Farm - Powys</li>
+                 <li data-id="15" data-region="wales">Coastal Pastures - Pembrokeshire</li>
+            </ul> 
+           <!--- I added data id and data region custom attributes to each farm list item for filtering -->
+        </aside>
+        
+        <section class = "map-section">
+            <div id="map">
+                <!-- Map will be inserted here -->
+            </div>
+            
+        </section>
+
+        <aside class="detail-panel">
+    <button id="close-panel" class="close-btn">✕</button>
+    
+    <div class="farm-details" id="farm-details">
+        <!-- Farm Header -->
+        <h3 id="farm-name">Farm Name</h3>
+        <p id="farm-location" class="farm-meta">Location</p>
+        
+        <!-- Overall Risk Card -->
+        <div class="overall-risk-card" id="overall-risk-card">
+            <span class="risk-label">OVERALL PARASITE RISK</span>
+            <h2 id="risk-level-display" class="risk-level-large">MEDIUM</h2>
+            <p id="risk-description" class="risk-description">
+                Risk is calculated based on current weather conditions and seasonal factors.
+            </p>
+        </div>
+
+        <!-- Parasite Risks -->
+        <h4 class="section-title">PARASITE RISKS AT THIS LOCATION</h4>
+        <div id="parasite-cards-container"></div>
+        
+        
+        <!-- Score Breakdown -->
+        <h4 class="section-title">SCORE BREAKDOWN (<span id="risk-score">0</span> / 10)</h4>
+        
+        <div class="score-breakdown">
+            <div class="score-row">
+                <span>Temperature</span>
+                <div class="score-bar"><div class="score-fill" id="temp-score"></div></div>
+                <span id="temp-score-text">0/3</span>
+            </div>
+            <div class="score-row">
+                <span>Rainfall (7d)</span>
+                <div class="score-bar"><div class="score-fill" id="rain-score"></div></div>
+                <span id="rain-score-text">0/3</span>
+            </div>
+            <div class="score-row">
+                <span>Humidity</span>
+                <div class="score-bar"><div class="score-fill" id="humidity-score"></div></div>
+                <span id="humidity-score-text">0/2</span>
+            </div>
+            <div class="score-row">
+                <span>Season</span>
+                <div class="score-bar"><div class="score-fill" id="season-score"></div></div>
+                <span id="season-score-text">0/2</span>
+            </div>
+        </div>  <!-- end of score-breakdown -->
+        
+        <!-- 7-Day Risk Timeline -->
+        <h4 class="section-title">RISK OVER THE PAST 7 DAYS</h4>
+        <div class="timeline-container">
+            <canvas id="risk-chart"></canvas>
+        </div>
+        
+        <!-- Weather Conditions -->
+        <h4 class="section-title">CURRENT WEATHER CONDITIONS</h4>
+        
+        <div class="weather-grid">
+            <div class="weather-item">
+                <span class="weather-label">TEMPERATURE</span>
+                <span class="weather-value" id="temperature">--°C</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">HUMIDITY</span>
+                <span class="weather-value" id="humidity">--%</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">7-DAY RAINFALL</span>
+                <span class="weather-value" id="rainfall">--mm</span>
+            </div>
+            <div class="weather-item">
+                <span class="weather-label">SEASON</span>
+                <span class="weather-value" id="season">--</span>
+            </div>
+        </div>
+        
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <span class="disclaimer-title">⚠ IMPORTANT DISCLAIMER:</span>
+            <p>This is a risk assessment tool based on environmental conditions. Always consult a veterinarian before making treatment decisions.</p>
+        </div>
+    </div>
+    
+</aside>
+
+    </main>
+    
+    
+
+    <!-- Assumptions & Limitations Modal -->
+<div id="assumptions-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button id="close-modal" class="close-btn">✕</button>
+        
+        <h2>Assumptions & Limitations</h2>
+        
+        <div class="modal-section">
+            <h3>📊 Data Sources</h3>
+            <ul>
+                <li>Weather data is sourced from <strong>Open-Meteo API</strong> and updates in real-time</li>
+                <li>Risk calculations are based on established veterinary research on parasite lifecycles</li>
+                <li>Farm locations are approximate coordinates for demonstration purposes</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>🔬 Risk Calculation Assumptions</h3>
+            <ul>
+                <li>Temperature above 10°C increases parasite activity</li>
+                <li>Higher rainfall (>5mm/week) creates favorable conditions for larvae survival</li>
+                <li>Humidity above 60% extends parasite lifespan on pasture</li>
+                <li>Spring and Autumn are peak risk seasons for most parasites</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>🐛 Parasite-Specific Factors</h3>
+            <ul>
+                <li><strong>Liver Fluke:</strong> Requires wet conditions and mud snail intermediate hosts</li>
+                <li><strong>Lungworm:</strong> Thrives in warm, humid conditions; spread via slugs and snails</li>
+                <li><strong>Gut Worms:</strong> Peak during grazing season with warm, moist pastures</li>
+                <li><strong>Coccidia:</strong> Highest risk in young animals during spring turnout</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>⚠️ Limitations</h3>
+            <ul>
+                <li>This tool provides <strong>estimates only</strong> and should not replace professional veterinary advice</li>
+                <li>Local microclimate variations may affect actual risk levels</li>
+                <li>Stocking density, grazing history, and previous treatments are not factored in</li>
+                <li>The model does not account for anthelmintic resistance patterns</li>
+                <li>7-day rainfall data may not capture longer-term moisture trends</li>
+            </ul>
+        </div>
+        
+        <div class="modal-section">
+            <h3>✅ Recommendations</h3>
+            <ul>
+                <li>Always conduct faecal egg counts (FEC) before treatment decisions</li>
+                <li>Consult with your veterinarian for farm-specific parasite management plans</li>
+                <li>Use this tool as one part of an integrated parasite control strategy</li>
+                <li>Monitor livestock regularly for clinical signs regardless of risk level</li>
+            </ul>
+        </div>
+        
+        <div class="modal-footer">
+            <p>Data fetched from Open-Meteo API • Risk scoring v2.0</p>
+        </div>
+    </div>
+</div>
+      
+
+<script src="js/app.js"></script>
+    </body>
+</html>
