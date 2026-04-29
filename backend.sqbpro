@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="backend.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="browser structure pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1392"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="risk" custom_title="0" dock_id="1" table="4,4:mainrisk"/><dock_state state="000000ff00000000fd0000000100000002000001cf000002e5fc0100000001fb000000160064006f0063006b00420072006f00770073006500310100000000000001cf0000010100ffffff000001cf0000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="farms" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="40"/><column index="2" value="85"/><column index="3" value="58"/><column index="4" value="70"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="land_metadata" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="61"/><column index="2" value="79"/><column index="3" value="68"/><column index="4" value="75"/><column index="5" value="121"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="pastures" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="78"/><column index="2" value="44"/><column index="3" value="58"/><column index="4" value="70"/><column index="5" value="135"/><column index="6" value="88"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="risk" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="21"/><column index="2" value="60"/><column index="3" value="77"/><column index="4" value="71"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="weather" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="21"/><column index="2" value="60"/><column index="3" value="89"/><column index="4" value="53"/><column index="5" value="88"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">CREATE TABLE farms (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100),
+  latitude DECIMAL(9,6),
+  longitude DECIMAL(9,6)
+);
+
+CREATE TABLE weather (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  farm_id INT,
+  temperature FLOAT,
+  rainfall FLOAT,
+  recorded_at DATETIME,
+  FOREIGN KEY (farm_id) REFERENCES farms(id)
+);
+
+CREATE TABLE risk (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  farm_id INT,
+  risk_score INT,
+  risk_level VARCHAR(10),
+  FOREIGN KEY (farm_id) REFERENCES farms(id)
+);
+
+INSERT INTO farms (id, name, latitude, longitude) VALUES
+(1, 'Green Valley Farm', 53.381129, -1.470085),
+(2, 'Sunny Acres', 53.390000, -1.480000),
+(3, 'Riverdale Farm', 53.400000, -1.490000),
+(4, 'Hilltop Farm', 53.410000, -1.500000),
+(5, 'Oakwood Farm', 53.420000, -1.510000);
+
+INSERT INTO weather (farm_id, temperature, rainfall, recorded_at) VALUES
+(1, 18.5, 2.3, '2026-04-25 08:00:00'),
+(1, 21.0, 0.0, '2026-04-25 14:00:00'),
+
+(2, 16.2, 4.5, '2026-04-25 09:00:00'),
+(2, 19.3, 1.2, '2026-04-25 15:00:00'),
+
+(3, 17.8, 3.1, '2026-04-25 10:00:00'),
+(3, 22.1, 0.0, '2026-04-25 16:00:00'),
+
+(4, 15.4, 6.7, '2026-04-25 07:30:00'),
+(4, 18.6, 2.5, '2026-04-25 13:30:00'),
+
+(5, 19.0, 0.0, '2026-04-25 08:30:00'),
+(5, 23.4, 0.0, '2026-04-25 14:30:00');
+
+INSERT INTO risk (farm_id, risk_score, risk_level) VALUES
+(1, 30, 'Low'),
+(2, 65, 'Medium'),
+(3, 85, 'High'),
+(4, 75, 'High'),
+(5, 20, 'Low');
+
+CREATE TABLE pastures (
+    pasture_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    area_size_hectares REAL,
+    animal_type TEXT -- e.g., 'Sheep' or 'Cattle'
+);
+
+CREATE TABLE land_metadata (
+    meta_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pasture_id INTEGER,
+    soil_type TEXT, -- e.g., 'Clay' (holds water) or 'Sandy' (drains well)
+    is_marshy BOOLEAN,
+    elevation_meters INTEGER,
+    FOREIGN KEY (pasture_id) REFERENCES pastures(pasture_id)
+);
+
+INSERT INTO pastures (name, latitude, longitude, area_size_hectares, animal_type)
+VALUES 
+('North Meadow', 53.3811, -1.4701, 12.5, 'Sheep'), -- Near Sheffield
+('Hill Top Farm', 54.0036, -2.5478, 25.0, 'Cattle'), -- Lancashire area
+('Riverside Flat', 51.4545, -2.5879, 8.2, 'Sheep'),  -- Bristol area
+('Valley View', 52.4862, -1.8904, 15.7, 'Cattle'),   -- Birmingham area
+('Coastal Range', 50.3755, -4.1427, 30.0, 'Sheep');  -- Plymouth area
+
+INSERT INTO land_metadata (pasture_id, soil_type, is_marshy, elevation_meters)
+VALUES 
+(1, 'Clay', 1, 45),    -- High Risk: Clay holds water, marshy (Sheffield)
+(2, 'Sandy', 0, 120),  -- Low Risk: Drains well, high elevation (Lancashire)
+(3, 'Loam', 0, 85),    -- Medium Risk: Balanced soil (Bristol)
+(4, 'Silt', 1, 30),    -- High Risk: Marshy, very low elevation (Birmingham)
+(5, 'Peat', 0, 210);   -- Variable: High altitude (Plymouth)</sql><current_tab id="0"/></tab_sql></sqlb_project>
